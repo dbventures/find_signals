@@ -24,7 +24,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute python script to update tickers page
-        run: python update_tickers.py
+        run: python -u update_tickers.py
 
       - name: Clone repo from your github.io page and commit newly generated html file
         run: | #change all the "username"s below to your username
