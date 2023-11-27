@@ -14,7 +14,6 @@ import seaborn as sns
 
 import plotly.graph_objects as go
 import pandas as pd
-get_ipython().run_line_magic('matplotlib', 'inline')
 
 import warnings
 warnings.filterwarnings("ignore")
