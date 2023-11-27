@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import pandas_ta as pta
 import yfinance as yf
 # from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
@@ -167,7 +170,7 @@ len(crypto_list)
 
 # In[10]:
 
-print(stock_list[:5])
+
 len(stock_list)
 
 
