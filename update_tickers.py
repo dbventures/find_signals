@@ -129,7 +129,6 @@ len(stock_list_snp)
 # In[6]:
 
 
-# os.environ['FMP_API_KEY'] = 'b187d0baf2c855400870f859dac36b99'
 # apiKey = os.environ['FMP_API_KEY']
 # url = f"https://financialmodelingprep.com/api/v3/available-traded/list?apikey={apiKey}"
 # df_all_stocks = pd.DataFrame(get_jsonparsed_data(url))
