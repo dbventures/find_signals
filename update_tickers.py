@@ -154,11 +154,15 @@ len(stock_list_snp)
 # In[8]:
 
 
+crypto_list = []
 with open("crypto_list.txt", 'r') as f:
-    crypto_list = [line.rstrip('\n') for line in f]
+    for line in f:
+        crypto_list.append(line.rstrip('\n'))
 
+stock_list = []
 with open("stock_list.txt", 'r') as f:
-    stock_list = [line.rstrip('\n') for line in f]
+    for line in f:
+        stock_list.append(line.rstrip('\n'))
 
 
 # In[9]:
