@@ -1,0 +1,9 @@
+pandas
+plotly
+matplotlib
+seaborn
+gunicorn
+yfinance
+mplfinance
+pandas-ta
+mplfinance
