@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
-from pandas_datareader.data import DataReader
 import pandas_ta as pta
 import yfinance as yf
 # from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
