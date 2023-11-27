@@ -167,7 +167,7 @@ len(crypto_list)
 
 # In[10]:
 
-
+print(stock_list[:5])
 len(stock_list)
 
 
