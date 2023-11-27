@@ -164,7 +164,7 @@ with open("stock_list.txt", 'r') as f:
     for line in f:
         stock_list.append(line.rstrip('\n'))
 
-
+print(stock_list)
 # In[9]:
 
 
