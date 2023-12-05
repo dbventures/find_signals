@@ -1,18 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-# # https://hackingthemarkets.com/interactive-brokers-api-tradingview-charts-in-python/
-# !pip install mplfinance
-# !pip install pandas-ta
-# !pip install plotly
-# !pip install yfinance --upgrade
-
-
-# In[1]:
-
 
 import pandas_ta as pta
 import yfinance as yf
@@ -60,7 +45,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 
-# In[2]:
+# In[4]:
 
 
 today = datetime.datetime.today()
@@ -93,11 +78,12 @@ def get_stock_price(symbol, freq = 'day'):
   df['ATR20'] = pta.atr(df['High'], df['Low'], df['Close'], window=20, fillna=False, mamode = 'ema')
   df['SMA20'] = df.ta.sma(20)
   df['SMA50'] = df.ta.sma(50)
-  df['Ave Volume 20'] = df['Volume'].rolling(20).mean() 
+  df['SMA100'] = df.ta.sma(100)
+  df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
   return df
 
 
-# In[3]:
+# In[5]:
 
 
 # get the full stock list of S&P 500
@@ -106,7 +92,7 @@ stock_list_snp = payload[0]['Symbol'].values.tolist()
 len(stock_list_snp)
 
 
-# In[4]:
+# In[6]:
 
 
 # crypto_list = []
@@ -139,7 +125,53 @@ len(stock_list_snp)
 #         f.write(str(ticker) + '\n')
 
 
-# In[5]:
+# In[7]:
+
+
+# crypto_list = []
+
+# url = 'https://web-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+
+# params = {
+#         'limit': 80,
+#     }
+
+# r = requests.get(url, params=params)
+
+# data = r.json()
+
+# for number, item in enumerate(data['data']):
+#     #print(f"{start+number:4} | {item['symbol']:5} | {item['date_added'][:10]}")
+#     #print(item['symbol'])
+#     if "US" not in item['symbol']:
+#         crypto_list.append(item['symbol'] + '-USD')
+
+# for symbol in crypto_list:
+#     try:
+#         get_stock_price(symbol)
+#     except:
+#         crypto_list.remove(symbol)
+
+# print(len(crypto_list))
+
+# # with open("crypto_list.txt", 'w') as f:
+# #     for ticker in crypto_list:
+# #         f.write(str(ticker) + '\n')
+
+
+# In[8]:
+
+
+futures_list = ['YM=F','ES=F','NQ=F','TF=F', # index
+                'CL=F','NG=F', # energy
+                'GC=F','SI=F','HG=F','PL=F','PA=F', # metal
+                '6E=F','6B=F','6A=F','6C=F','6S=F','6J=F'] # forex
+
+forex_list = ['EURUSD=T','GBPUSD=T','AUDUSD=T','USDJPY=T','CHFUSD=T','CADUSD=T','NZDUSD=T',
+              'EURGBP=T','EURJPY=T','EURAUD=T','GBPJPY=T','GBPAUD=T','AUDNZD=T','AUDJPY=T']
+
+
+# In[9]:
 
 
 # os.environ['FMP_API_KEY'] = 'b187d0baf2c855400870f859dac36b99'
@@ -150,7 +182,7 @@ len(stock_list_snp)
 # df_all_stocks
 
 
-# In[6]:
+# In[10]:
 
 
 # df_all_stocks = pd.read_csv("all_stocks_info.csv")
@@ -165,13 +197,13 @@ len(stock_list_snp)
 #         f.write(str(ticker) + '\n')
 
 
-# In[7]:
+# In[11]:
 
 
-crypto_list = []
-with open("crypto_list.txt", 'r') as f:
-    for line in f:
-        crypto_list.append(line.rstrip('\n'))
+# crypto_list = []
+# with open("crypto_list.txt", 'r') as f:
+#     for line in f:
+#         crypto_list.append(line.rstrip('\n'))
 
 stock_list = []
 with open("stock_list.txt", 'r') as f:
@@ -179,25 +211,21 @@ with open("stock_list.txt", 'r') as f:
         stock_list.append(line.rstrip('\n'))
 
 
-# In[8]:
+# In[12]:
 
 
-len(crypto_list)
 
 
-# In[9]:
-
-
-len(stock_list)
-
-
-# In[10]:
+# In[13]:
 
 
 stock_list_all = set(stock_list_snp).union(set(stock_list))
 
 
-# In[13]:
+# In[14]:
+
+
+
 
 
 #method 1: fractal candlestick pattern
@@ -207,11 +235,11 @@ def is_support(df,i):
     cond2 = df['Low'][i] < df['Low'][i+1]
     cond3 = df['Low'][i+1] < df['Low'][i+2]
     cond4 = df['Low'][i-1] < df['Low'][i-2]
-    
+
     cond_3bar_1 = (df['Low'][i-1] - df['Low'][i]) > 0.8*df['ATR20'][i]
     cond_3bar_2 = (df['Low'][i+1] - df['Low'][i]) > 0.8*df['ATR20'][i]
 
-    
+
     return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
 
 # determine bearish fractal
@@ -220,10 +248,10 @@ def is_resistance(df,i):
     cond2 = df['High'][i] > df['High'][i+1]
     cond3 = df['High'][i+1] > df['High'][i+2]
     cond4 = df['High'][i-1] > df['High'][i-2]
-    
+
     cond_3bar_1 = (df['High'][i] - df['High'][i-1]) > 0.6*df['ATR20'][i]
     cond_3bar_2 = (df['High'][i] - df['High'][i+1]) > 0.6*df['ATR20'][i]
-    
+
     return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
 
 
@@ -273,7 +301,7 @@ def find_levels(df):
 
 
 
-# In[14]:
+# In[17]:
 
 
 # v5, doesnt make sense to have more than swing 4, because swing 5 onwards is too late if swing 5 is below LP, since must be within 4 bar close back above
@@ -335,7 +363,7 @@ def bullish_dr1(df,i, drop_days=3): # i should be -1 for most recent setup, for 
         which_swing)
 
 
-# In[15]:
+# In[18]:
 
 
 # v5
@@ -388,7 +416,7 @@ def bearish_ur1(df,i,rise_days=3): # i should be -1 for most recent setup, for b
         which_swing)
 
 
-# In[16]:
+# In[19]:
 
 
 def bearish_fs(df,i): # combine with force top or test SMA20/50
@@ -425,7 +453,7 @@ def bearish_fs(df,i): # combine with force top or test SMA20/50
   #return (test or fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)
 
 
-# In[17]:
+# In[20]:
 
 
 def bullish_fs(df,i): # combine with force bottom or test SMA20/50
@@ -454,7 +482,13 @@ def bullish_fs(df,i): # combine with force bottom or test SMA20/50
 # for force bottom, minimum of all lows go below LP (support level), then final close is above then ok
 
 
-# In[18]:
+# In[ ]:
+
+
+
+
+
+# In[21]:
 
 
 def test_force_top(df, levels): # should give it levels_high, 5th bar should be below, 4th bar onwards anything above
@@ -493,7 +527,7 @@ def get_enter_prices(df, ticker, direction = 'Long', risk = 300, currency = 'USD
         currency = 'HKD'
     else:
         currency = 'USD'
-        
+
     if currency == 'USD':
         risk*=0.75
     elif currency == 'HKD':
@@ -548,25 +582,182 @@ def get_enter_prices(df, ticker, direction = 'Long', risk = 300, currency = 'USD
     return price_dict
 
 
+# In[22]:
+
+
+# test_sma_above
+def test_sma_above(df, i, j): # combine with force bottom or trend
+  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin
+  price_cond = df['Close'][i] > 2
+  trend_cond = df['SMA20'][i] > df['SMA50'][i] # current price can be below SMA, need not be above, just need to be near
+  trend_cond2 = df['SMA50'][i] > df['SMA100'][i]
+  bars_buffer = 10/100 * df['ATR20'][i] # exponential ATR?
+  exe_buffer = 1 * df['ATR20'][i]
+
+  # final bar higher than SMA, or at least very near to SMA (10/100 of ATR as shown above)
+  exe_with_flow = (df['High'][i] > df['SMA50'][i]) or (abs(df['High'][i] - df['SMA50'][i]) < bars_buffer)
+  exe_not_too_far_from_ma = (abs(df['High'][i] - df['SMA20'][i]) < exe_buffer) or (abs(df['High'][i] - df['SMA50'][i]) < exe_buffer)
+
+  # any bar from current i to j bars ago is near, will match
+  near_ma = False
+  for k in range(i, j-1, -1):
+      near_ma = (((df['High'][k] > df['SMA20'][k]) and (df['Low'][k] < df['SMA20'][k])) # bar cuts 20 SMA
+      or (abs(df['High'][k] - df['SMA20'][k]) < bars_buffer) # high not too far from 20 SMA
+      or (abs(df['Low'][k] - df['SMA20'][k]) < bars_buffer) # low not too far from 20 SMA
+      or ((df['High'][k] > df['SMA50'][k]) and (df['Low'][k] < df['SMA50'][k]))
+      or (abs(df['High'][k] - df['SMA50'][k]) < bars_buffer)
+      or (abs(df['Low'][k] - df['SMA50'][k]) < bars_buffer))
+      if near_ma:
+            break
+
+  return (exe and price_cond and trend_cond and trend_cond2 and exe_with_flow and exe_not_too_far_from_ma and near_ma)
+
+
+
+# test_sma_below
+def test_sma_below(df, i, j): # combine with force bottom or trend
+  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  price_cond = df['Close'][i] > 2
+  # maybe add 50 < 100 also
+  trend_cond = df['SMA20'][i] < df['SMA50'][i] # current price can be below SMA, need not be above, just need to be near
+  trend_cond2 = df['SMA50'][i] < df['SMA100'][i]
+  bars_buffer = 10/100 * df['ATR20'][i] # exponential ATR?
+  exe_buffer = 1 * df['ATR20'][i]
+
+  # final bar low lower than SMA, or at least very near to SMA (10/100 of ATR as shown above)
+  exe_with_flow = (df['Low'][i] < df['SMA50'][i]) or (abs(df['Low'][i] - df['SMA50'][i]) < bars_buffer)
+  exe_not_too_far_from_ma = (abs(df['Low'][i] - df['SMA20'][i]) < exe_buffer) or (abs(df['Low'][i] - df['SMA50'][i]) < exe_buffer)
+
+  # any bar from current i to j bars ago is near, will match
+  near_ma = False
+  for k in range(i, j-1, -1): # j-1 as last value not included
+      near_ma = (((df['High'][k] > df['SMA20'][k]) and (df['Low'][k] < df['SMA20'][k])) # bar cuts 20 SMA
+      or (abs(df['High'][k] - df['SMA20'][k]) < bars_buffer) # high not too far from 20 SMA
+      or (abs(df['Low'][k] - df['SMA20'][k]) < bars_buffer) # low not too far from 20 SMA
+      or ((df['High'][k] > df['SMA50'][k]) and (df['Low'][k] < df['SMA50'][k]))
+      or (abs(df['High'][k] - df['SMA50'][k]) < bars_buffer)
+      or (abs(df['Low'][k] - df['SMA50'][k]) < bars_buffer))
+      if near_ma:
+            break
+
+  return (exe and price_cond and trend_cond and trend_cond2 and exe_with_flow and exe_not_too_far_from_ma and near_ma)
+
+
+
+# In[23]:
+
+
+# here onwards need SMA
+
+def find_recent_levels(df, i, j):
+    # a list to store resistance and support levels
+    recent_lows = []
+    recent_highs = []
+    #for i in range(2, df.shape[0] - 2): # exclude most recent 10 bars, anyway the -2 is cos need 2 more bars in the fractal
+
+    # from most recent to some bars earlier, maybe i can be -10, j can be -30 for e.g., i cannot be -1, need 2 bars after at least
+    for k in range(i, j-1, -1):
+
+        if is_support(df, k):
+            low = df['Low'][k]
+            #if is_far_from_level(low, levels_low, df):
+            # do not use most recent swing high or low to remove it, because the most recent one may be a force top/bottom but it overrides the previous one
+            # either that or just don't find LP for most recent 10 bars in the range above.
+            remove_previous(low, levels_low, 'low') # delete previous if this swing low is below previous, as previous is broken
+            recent_lows.append((k, low))
+
+        elif is_resistance(df, k):
+            high = df['High'][k]
+            #if is_far_from_level(high, levels_high, df):
+            remove_previous(high, levels_high, 'high')
+            recent_highs.append((k, high))
+
+
+    return recent_lows, recent_highs
+
+# any bar between sma start and end test sma
+# recent swing has start and end too
+def bullish_uc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, recent_swing_end = -26):
+    above_sma = test_sma_above(df, sma_start, sma_end)
+    if above_sma: # don't bother testing for lows and highs if not even testing sma
+        recent_lows, recent_highs = find_recent_levels(df, recent_swing_start, recent_swing_end)
+        if (len(recent_lows) > 0) and (len(recent_highs) > 0):
+            most_recent_low = recent_lows[0]
+            most_recent_high = recent_highs[0]
+            most_recent_low_index = most_recent_low[0] # first one that went into the list
+            most_recent_high_index = most_recent_high[0]
+            # we want this, low occured first then high, bullish, so can check for force bottom
+            if most_recent_low_index < most_recent_high_index:
+
+                # exe already tested in above_sma
+                if df['Close'][i] >= most_recent_low[1]: # close above recent low, the low of candle can still be below
+                    # print("stage 2") # alot managed to clear this stage
+                    # before that must go below recent low first
+                    # delay means number of candles that were below the low before it closed back up
+                    # exe is also the candle that went below and back up, one day before is completely above swing low and is lowest of all candles from swing high onwards
+                    #no_delay = (df['Low'][i] < most_recent_low[1]) and (df['Low'][i-1] > most_recent_low[1]) and (df['Low'][i-1] < df['Low'][most_recent_high:i].min())  most_recent_low[1])
+                    #got_1_delay = (df['Low'][i-1] < most_recent_low[1]) and (df['Low'][i-2] > most_recent_low[1]) and (df['Low'][i-2] < df['Low'][most_recent_high:i-1].min())  most_recent_low[1])
+
+                    delay_cond = False
+
+                    for d in range(0, 5):
+                        #print("stage 3")
+                        if most_recent_high_index < i-d: # most recent high must be at a date before the delay candles
+                            # maybe just df['Low'][most_recent_high:i-d-1].min() > most_recent_low[1]
+                            #delay_cond = (df['Low'][i-d] < most_recent_low[1]) and (df['Low'][i-d-1] > most_recent_low[1]) and (df['Low'][i-d-1] < df['Low'][most_recent_high:i-d-1].min())
+                            delay_cond = (df['Low'][i-d] < most_recent_low[1]) and (df['Low'][most_recent_high:i-d].min() > most_recent_low[1])
+                            if delay_cond:
+                                return delay_cond, (df.index[most_recent_low_index], most_recent_low[1]), (df.index[most_recent_high_index], most_recent_high[1])
+    return False, None, None # anything not met, return False
+
+
+
+
+
+
+# In[24]:
 
 
 len(stock_list_all)
 
 
-# In[21]:
+# In[25]:
+
+
+# TODO: make script for crypt as additional page
+# make script for short term only on S&P DR1X # done
+# make function for test 20/50MA from above
+# make function for test 20/50MA from below
+
+# bearish/bullish FS reversal: Done
+# UR1/DR1: Done
+# UR2/DR2 (don't need to program more?) # check for MA and return those
+
+# bearish/bullish FS test MA
+# both below similar
+# UC1/DC1
+# UC2/DC2
+
+# script to scan everything for futures with position sizing
+# script to scan everything for forex 4h timeframe with position sizing
+
+
+# In[26]:
 
 
 day = -1 # minus 1 means most recent date
 freq = 'day'
 rise_drop_days = 5
+sma_start = -1
+sma_end = -4
+recent_swing_start = -3
+recent_swing_end = -20
 
 # one dict for one type, list to store all dicts?
-ur1 = []
-dr1 = []
-bear_fs = []
-bull_fs = []
+
 all_dict = {'UR1':[],'DR1':[],
-            'bull_fs':[],'bear_fs':[]
+            'bull_fs':[],'bear_fs':[], 'bull_fs_sma':[], 'bear_fs_sma':[],
+            'UC1': []
            }
 
 # can consider to append df if match also, so no need to scrape again
@@ -580,6 +771,15 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
     bullish_dr_result, swing_bar_dr = bullish_dr1(df,day,drop_days=rise_drop_days)
     bearish_fs_result, which_bar_bear_fs = bearish_fs(df,day)
     bullish_fs_result, which_bar_bull_fs = bullish_fs(df,day)
+    #print(ticker)
+    bullish_uc1_result, most_recent_low, most_recent_high = bullish_uc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
+
+    if bullish_uc1_result:
+        print("######## Bullish UC1 Signal:", i, ticker)
+        ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Long'}
+        ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+        all_dict['UC1'].append(ticker_df)
+
     if bearish_ur_result:
 
         #ur.append(ticker)
@@ -603,7 +803,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         elif force_top == False:
             print("No force top")
             ticker_df['Force Top'] = False
-        ur1.append(ticker_df)
+
             #bearish_ur_dict[ticker] = dict_df
 
     if bullish_dr_result:
@@ -618,6 +818,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
 
         force_bottom, level = test_force_bottom(df, levels_low)
 
+
         if force_bottom: # true if have, None if don't have
             print("######## Force bottom:", level)
             ticker_df['Force Bottom'] = level # level is tuple with datetime index and level itself
@@ -627,7 +828,9 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         elif force_bottom == False:
             print("No force bottom")
             ticker_df['Force Bottom'] = False
-        dr1.append(ticker_df)
+
+
+
 
 
     if bearish_fs_result:
@@ -637,6 +840,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         #print("Swing Bar:", swing_bar_ur)
 
         levels_low, levels_high = find_levels(df)
+        below_sma = test_sma_below(df, -1, -6)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_high,
@@ -644,6 +848,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
 
         # force_top, level = test_force_top(df.iloc[i-swing_bar:], levels_high)
         force_top, level = test_force_top(df, levels_high)
+        # TODO: test_ma_from_above
 
         if force_top:
             print("######## Force top:", level)
@@ -653,8 +858,20 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         elif force_top == False:
             print("No force top")
             ticker_df['Force Top'] = False
-        bear_fs.append(ticker_df)
+
             #bearish_ur_dict[ticker] = dict_df
+
+        if below_sma:
+            print("######## Below SMA Detected")
+            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+            all_dict['bear_fs_sma'].append(ticker_df)
+        elif below_sma == False:
+            print("No below SMA")
+            #ticker_df['Force Top'] = False
+
+            #bearish_ur_dict[ticker] = dict_df
+
+
 
     if bullish_fs_result:
         #dict_df = {}
@@ -668,6 +885,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
                      'FS Bar': which_bar_bull_fs, 'Direction': 'Long'}
 
         force_bottom, level = test_force_bottom(df, levels_low)
+        above_sma = test_sma_above(df, -1, -6)
 
         if force_bottom:
             print("######## Force bottom:", level)
@@ -677,13 +895,20 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         elif force_bottom == False:
             print("No force bottom")
             ticker_df['Force Bottom'] = False
-        bull_fs.append(ticker_df)
+
+        if above_sma:
+            print("######## Above SMA Detected")
+            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+            all_dict['bull_fs_sma'].append(ticker_df)
+        elif above_sma == False:
+            print("No above SMA")
+
 
   except Exception as e:
     print(e)
 
 
-# In[22]:
+# In[27]:
 
 
 # # for visualization
@@ -698,12 +923,17 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
 #   fig.show()
 
 
-# In[23]:
+# In[28]:
 
 
 #for visualization
 def plot_all(levels, df, ticker, fs_bar = None):
-    fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
+                          go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
+                          go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1))])
+
+
     for level in levels:
         fig.add_shape(type="line", x0=level[0], x1=df.index[-1], y0=level[1], y1 =level[1],
                       line_width=1, line_dash="dash", line_color="blue")
@@ -718,6 +948,43 @@ def plot_all(levels, df, ticker, fs_bar = None):
 
 
 
+# In[29]:
+
+
+# df = get_stock_price("BJ") # see why it is needed to ignore most recent swing
+# levels_low, levels_high = find_levels(df)
+
+
+# In[30]:
+
+
+# # test steepness calculation (this is correct)
+
+# df = get_stock_price("BJ") # see why it is needed to ignore most recent swing
+# bullish_dr_result, swing_bar_dr = bullish_dr1(df,day,drop_days=rise_drop_days)
+# levels_low, levels_high = find_levels(df)
+# force_top, level = test_force_bottom(df, levels_low)
+# print(force_top, level)
+# check_50_steepness_top(df, swing_bar_dr, level, rise_days = rise_drop_days)
+# # plot_all(levels_low, df, "J", 50)
+
+
+# start_of_swing = -swing_bar_dr - 3 - 3
+#    # return (df['High'][start_of_swing] - level[1]) > 0.5*((df.loc[level[0]:df.index[start_of_swing]]['High'].max()) - level[1])
+# df['High'][start_of_swing:-swing_bar_dr].max()
+
+
+
+# (df['High'][start_of_swing:-swing_bar_dr].max() - level[1]) > 0.5*((df.loc[level[0]:df.index[start_of_swing]]['High'].max()) - level[1])
+
+
+# In[31]:
+
+
+all_dict
+
+
+# In[32]:
 
 
 flip_dict = {}
@@ -729,11 +996,43 @@ for strategy, ticker_dict_list in all_dict.items():
             flip_dict[ticker_dict['Ticker']].append(strategy)
         except:
             flip_dict[ticker_dict['Ticker']]= [strategy]
+flip_dict
+
+
+# In[33]:
+
+
+tickers = ['FOF', 'DY', 'FSLR', '1316.HK', 'J']
+# most conservative entry is 0.5, 0.25 is chasing a bit, close is chasing, want to enter asap
+for strategy, ticker_dict_list in all_dict.items():
+    for ticker_dict in ticker_dict_list:
+        ticker = ticker_dict['Ticker']
+        if ticker in tickers:
+            df = get_stock_price(ticker, freq = freq)
+
+            prices_dict = get_enter_prices(df, ticker, direction =  ticker_dict['Direction'],
+                                               risk = 300, currency = 'HKD', ratio = 2)
+
+            print(ticker, ticker_dict['Direction'])
+            print(prices_dict)
+            print()
+
+
+# In[ ]:
 
 
 
 
 
+# In[34]:
+
+
+# import json
+# with open('all_dict.json', 'w', encoding='utf-8') as f:
+#     json.dump(all_dict, f, ensure_ascii=False, indent=4)
+
+
+# In[35]:
 
 
 # datetime object containing current date and time
@@ -743,14 +1042,23 @@ timezone_string = datetime.datetime.now().astimezone().tzname()
 print(dt_string, timezone_string)
 
 
-# In[35]:
+# In[ ]:
+
+
+
+
+
+# In[36]:
 
 
 # exporting
 import pprint
 #for visualization
 def plot_all_with_return(levels, df, ticker, fs_bar = None):
-    fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
+                          go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
+                          go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1))])
     for level in levels:
         fig.add_shape(type="line", x0=level[0], x1=df.index[-1], y0=level[1], y1 =level[1],
                       line_width=1, line_dash="dash", line_color="blue")
@@ -768,7 +1076,7 @@ with open('interested_tickers.html', 'a') as f:
     f.truncate(0) # clear file if something is already written on it
     #title = "<h1>Tickers</h1>"
     #f.write(title)
-    updated = "<h3>Last updated: <span id='timestring'></span></h3>"       
+    updated = "<h3>Last updated: <span id='timestring'></span></h3>"
     # GitHub Actions server timezone may not be at the same timezone of person opening the page on browser
     # hence Javascript code is written below to convert to client timezone before printing it on
     current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
@@ -776,7 +1084,7 @@ with open('interested_tickers.html', 'a') as f:
     for textLine in pprint.pformat(flip_dict).splitlines():
       htmlLines.append('<br/>%s' % textLine) # or something even nicer
     htmlText = '\n'.join(htmlLines)
-    
+
     f.write(updated + current_time + htmlText)
     for strategy, ticker_dict_list in all_dict.items():
       f.write(f"<h2>{strategy}</h2>")
@@ -797,6 +1105,3 @@ with open('interested_tickers.html', 'a') as f:
           htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
           f.write(htmlText2 + htmlText3)
           f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
-
-
-
