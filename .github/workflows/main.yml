@@ -30,8 +30,11 @@ jobs:
         run: | #change all the "username"s below to your username
           git clone https://github.com/dbventures/dbventures.github.io.git/
           cp interested_tickers.html dbventures.github.io/interested_tickers.html
+          cp interested_tickers.pickle dbventures.github.io/interested_tickers.pickle
+          cp flip_dict.pickle dbventures.github.io/flip_dict.pickle
+          
           cd dbventures.github.io
-          git add interested_tickers.html
+          git add .
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m 'refresh tickers charts'
