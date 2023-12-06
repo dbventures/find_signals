@@ -1,4 +1,3 @@
-
 # Commented out IPython magic to ensure Python compatibility.
 import pandas_ta as pta
 import yfinance as yf
@@ -16,6 +15,7 @@ import seaborn as sns
 
 import plotly.graph_objects as go
 import pandas as pd
+# %matplotlib inline
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -29,10 +29,9 @@ from mplfinance.original_flavor import candlestick_ohlc
 import matplotlib.dates as mpl_dates
 import matplotlib.pyplot as plt
 
+import pickle
 import os
 import requests
-
-import pickle
 
 # For parsing financial statements data from financialmodelingprep api
 from urllib.request import urlopen
@@ -961,11 +960,6 @@ all_dict
 
 
 
-# # Store data (serialize)
-with open('interested_tickers.pickle', 'wb') as handle:
-    pickle.dump(all_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
 flip_dict = {}
 for strategy, ticker_dict_list in all_dict.items():
     for ticker_dict in ticker_dict_list:
@@ -976,10 +970,40 @@ for strategy, ticker_dict_list in all_dict.items():
         except:
             flip_dict[ticker_dict['Ticker']]= [strategy]
 
+# # Store data (serialize)
+with open('interested_tickers.pickle', 'wb') as handle:
+    pickle.dump(all_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 # # Store data (serialize)
 with open('flip_dict.pickle', 'wb') as handle:
     pickle.dump(flip_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# # Load data (deserialize)
+# with open('tickers.pickle', 'rb') as handle:
+#     unserialized_data = pickle.load(handle)
+
+# tickers = ['FOF', 'DY', 'FSLR', '1316.HK', 'J']
+# # most conservative entry is 0.5, 0.25 is chasing a bit, close is chasing, want to enter asap
+# for strategy, ticker_dict_list in all_dict.items():
+#     for ticker_dict in ticker_dict_list:
+#         ticker = ticker_dict['Ticker']
+#         if ticker in tickers:
+#             df = get_stock_price(ticker, freq = freq)
+
+#             prices_dict = get_enter_prices(df, ticker, direction =  ticker_dict['Direction'],
+#                                                risk = 300, currency = 'HKD', ratio = 2)
+
+#             print(ticker, ticker_dict['Direction'])
+#             print(prices_dict)
+#             print()
+
+
+
+# import json
+# with open('all_dict.json', 'w', encoding='utf-8') as f:
+#     json.dump(all_dict, f, ensure_ascii=False, indent=4)
+
 
 
 
@@ -1026,7 +1050,7 @@ with open('interested_tickers.html', 'a') as f:
 
     f.write(updated + current_time + htmlText)
     for strategy, ticker_dict_list in all_dict.items():
-      f.write(f"<center><h2>{strategy}</h2></center>")
+      f.write(f"<h2>{strategy}</h2>")
       for ticker_dict in ticker_dict_list:
           ticker = ticker_dict['Ticker']
           #if ticker in stock_list_snp:
