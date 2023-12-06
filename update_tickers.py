@@ -966,10 +966,6 @@ with open('interested_tickers.pickle', 'wb') as handle:
     pickle.dump(all_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
 
-# # Store data (serialize)
-with open('flip_dict.pickle', 'wb') as handle:
-    pickle.dump(flip_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
 # # Load data (deserialize)
 # with open('tickers.pickle', 'rb') as handle:
 #     unserialized_data = pickle.load(handle)
@@ -984,6 +980,10 @@ for strategy, ticker_dict_list in all_dict.items():
         except:
             flip_dict[ticker_dict['Ticker']]= [strategy]
 
+
+# # Store data (serialize)
+with open('flip_dict.pickle', 'wb') as handle:
+    pickle.dump(flip_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 
