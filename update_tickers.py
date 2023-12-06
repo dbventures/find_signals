@@ -964,11 +964,7 @@ all_dict
 # # Store data (serialize)
 with open('interested_tickers.pickle', 'wb') as handle:
     pickle.dump(all_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
 
-# # Load data (deserialize)
-# with open('tickers.pickle', 'rb') as handle:
-#     unserialized_data = pickle.load(handle)
 
 flip_dict = {}
 for strategy, ticker_dict_list in all_dict.items():
@@ -1030,7 +1026,7 @@ with open('interested_tickers.html', 'a') as f:
 
     f.write(updated + current_time + htmlText)
     for strategy, ticker_dict_list in all_dict.items():
-      f.write(f"<h2>{strategy}</h2>")
+      f.write(f"<center><h2>{strategy}</h2></center>")
       for ticker_dict in ticker_dict_list:
           ticker = ticker_dict['Ticker']
           #if ticker in stock_list_snp:
