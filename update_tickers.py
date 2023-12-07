@@ -855,36 +855,6 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         elif above_sma == False:
             print("No above SMA")
 
-    if bullish_fs_result:
-        #dict_df = {}
-        #dr.append(ticker)
-        print("Bullish FS Signal:", i, ticker)
-        #print("Swing Bar:", swing_bar_dr)
-        levels_low, levels_high = find_levels(df)
-
-        ticker_df = {'Ticker': ticker,
-                   'Levels': levels_low,
-                     'FS Bar': which_bar_bull_fs, 'Direction': 'Long'}
-
-        force_bottom, level = test_force_bottom(df, levels_low)
-        above_sma = test_sma_above(df, -1, -6)
-
-        if force_bottom:
-            print("######## Force bottom:", level)
-            ticker_df['Force Bottom'] = level
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
-            all_dict['bull_fs'].append(ticker_df)
-        elif force_bottom == False:
-            print("No force bottom")
-            ticker_df['Force Bottom'] = False
-
-        if above_sma:
-            print("######## Above SMA Detected")
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
-            all_dict['bull_fs_sma'].append(ticker_df)
-        elif above_sma == False:
-            print("No above SMA")
-
 
   except Exception as e:
     print(e)
