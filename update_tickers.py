@@ -667,7 +667,7 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
                         if most_recent_low_index < i-d: # most recent low must be at a date before the delay candles
                             # maybe just df['Low'][most_recent_high:i-d-1].min() > most_recent_low[1]
                             # delay_cond = (df['Low'][i-d] < most_recent_low[1]) and (df['Low'][i-d-1] > most_recent_low[1]) and (df['Low'][i-d-1] < df['Low'][most_recent_high_index:i-d-1].min())
-                            delay_cond = (df['High'][i-d] > most_recent_high[1]) and (df['High'][most_recent_high_index:i-d].max() < most_recent_high[1])
+                            delay_cond = (df['High'][i-d] > most_recent_high[1]) and (df['High'][most_recent_low_index:i-d].max() < most_recent_high[1])
                             if delay_cond:
                                 return delay_cond, (df.index[most_recent_low_index], most_recent_low[1]), (df.index[most_recent_high_index], most_recent_high[1])
     return False, None, None # anything not met, return False
