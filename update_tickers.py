@@ -696,8 +696,8 @@ freq = 'day'
 rise_drop_days = 5
 sma_start = -1
 sma_end = -4
-recent_swing_start = -3
-recent_swing_end = -20
+recent_swing_start = -5
+recent_swing_end = -30
 risk = 300
 
 # one dict for one type, list to store all dicts?
