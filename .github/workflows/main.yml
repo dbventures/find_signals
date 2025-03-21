@@ -10,8 +10,7 @@ jobs:
   refresh_page:
     runs-on: ubuntu-latest
     steps:
-      - name: Access the repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
