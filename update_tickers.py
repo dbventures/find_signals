@@ -211,7 +211,7 @@ len(stock_list)
 stock_list_all = set(stock_list_snp).union(set(stock_list))
 
 # for debugging only
-stock_list_all = list(stock_list_all)[:10]
+# stock_list_all = list(stock_list_all)[:10]
 
 #method 1: fractal candlestick pattern
 # determine bullish fractal
