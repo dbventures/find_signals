@@ -21,6 +21,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import pandas as pd
+import yahooquery
 import yfinance as yf
 import numpy as np
 import math
@@ -62,14 +63,38 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # df.head()
 
 
-# get stock prices using yfinance library
+# # get stock prices using yfinance library
+# def get_stock_price(symbol, freq = 'day'):
+#   if freq == 'week':
+#     df = yf.download(symbol, start=string_4y_ago, threads= False, progress=False, interval='1wk')
+#   elif freq == 'day':
+#     df = yf.download(symbol, start=string_1y_ago, threads= False, progress=False, interval='1d')
+#   elif freq == 'min':
+#     df = yf.download(symbol, start=string_5d_ago, threads= False, progress=False, interval='30m')
+#   df['Date'] = pd.to_datetime(df.index)
+#   df['Date'] = df['Date'].apply(mpl_dates.date2num)
+#   df = df.loc[:,['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+#   df['ATR20'] = pta.atr(df['High'], df['Low'], df['Close'], window=20, fillna=False, mamode = 'ema')
+#   df['SMA20'] = df.ta.sma(20)
+#   df['SMA50'] = df.ta.sma(50)
+#   df['SMA100'] = df.ta.sma(100)
+#   df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
+#   return df
+
+# get stock prices using yahooquery library
 def get_stock_price(symbol, freq = 'day'):
+  ticker = yahooquery.Ticker(symbol, asynchronous=True)
   if freq == 'week':
-    df = yf.download(symbol, start=string_4y_ago, threads= False, progress=False, interval='1wk')
+    df = ticker.history(period='4y', interval='1wk')
+    # df = yf.download(symbol, start=string_4y_ago, threads= False, progress=False, interval='1wk')
   elif freq == 'day':
-    df = yf.download(symbol, start=string_1y_ago, threads= False, progress=False, interval='1d')
+    df = ticker.history(period='1y', interval='1d')
+    #df = yf.download(symbol, start=string_1y_ago, threads= False, progress=False, interval='1d')
   elif freq == 'min':
-    df = yf.download(symbol, start=string_5d_ago, threads= False, progress=False, interval='30m')
+    df = ticker.history(period='5d', interval='1m')
+    #df = yf.download(symbol, start=string_5d_ago, threads= False, progress=False, interval='30m')
+  df = df.loc[symbol]
+  df.columns = [col.title() for col in df.columns]
   df['Date'] = pd.to_datetime(df.index)
   df['Date'] = df['Date'].apply(mpl_dates.date2num)
   df = df.loc[:,['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
@@ -79,6 +104,7 @@ def get_stock_price(symbol, freq = 'day'):
   df['SMA100'] = df.ta.sma(100)
   df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
   return df
+
 
 # get the full stock list of S&P 500
 payload=pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
