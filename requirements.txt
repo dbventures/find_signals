@@ -9,6 +9,7 @@ mplfinance
 pandas-ta
 mplfinance
 lxml
+yahooquery
 
 
 
