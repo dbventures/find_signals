@@ -46,6 +46,6 @@ jobs:
         with: #change all the "username"s below to your username
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository: "dbventures/dbventures.github.io"
-          branch: "main"
+          branch: ${{ github.ref }}
           directory: ./dbventures.github.io
 
