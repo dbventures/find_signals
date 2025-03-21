@@ -468,10 +468,11 @@ def bearish_fs(df,i): # combine with force top or test SMA20/50
     which_bar = 4
   if fs_5_bar:
     which_bar = 5
-  if fs_6_bar:
-    which_bar = 6
+  # if fs_6_bar:
+  #   which_bar = 6
 
-  return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)), which_bar
+  #return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)), which_bar
+  return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar)), which_bar # turn to dict better
   #return (test or fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)
 
 def bullish_fs(df,i): # combine with force bottom or test SMA20/50
@@ -491,10 +492,11 @@ def bullish_fs(df,i): # combine with force bottom or test SMA20/50
     which_bar = 4
   if fs_5_bar:
     which_bar = 5
-  if fs_6_bar:
-    which_bar = 6
+  # if fs_6_bar:
+  #   which_bar = 6
 
-  return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)), which_bar # turn to dict better
+  #return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)), which_bar # turn to dict better
+  return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar)), which_bar # turn to dict better
   #return (test or fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)
 
 # for force bottom, minimum of all lows go below LP (support level), then final close is above then ok
@@ -886,7 +888,6 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
                      'FS Bar': which_bar_bear_fs, 'Direction': 'Short'}
 
         force_top, level = test_force_top(df, levels_high)
-        below_sma = test_sma_below(df, -1, -6)
 
         if force_top:
             print("######## Force Top:", level)
@@ -901,7 +902,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
             print("######## Below SMA Detected")
             ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
             all_dict['bear_fs_sma'].append(ticker_df)
-        elif above_sma == False:
+        elif below_sma == False:
             print("No below SMA")
 
     if bullish_fs_result:
