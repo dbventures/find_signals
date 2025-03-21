@@ -44,8 +44,8 @@ jobs:
       - name: Push updated html to github.io page
         uses: ad-m/github-push-action@master
         with: #change all the "username"s below to your username
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           repository: "dbventures/dbventures.github.io"
-          branch: ${{ github.ref }}
+          branch: "main"
           directory: ./dbventures.github.io
 
