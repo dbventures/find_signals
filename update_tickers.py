@@ -824,9 +824,6 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         levels_low, levels_high = find_levels(df)
         below_sma = test_sma_below(df, -1,-6)
         #dr.append(ticker)
-        print("Bullish FS Signal:", i, ticker)
-        #print("Swing Bar:", swing_bar_dr)
-        levels_low, levels_high = find_levels(df)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_low,
