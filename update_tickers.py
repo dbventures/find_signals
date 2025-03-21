@@ -1046,20 +1046,97 @@ with open('interested_tickers.html', 'a') as f:
       f.write(f"<h2>{strategy}</h2>")
       for ticker_dict in ticker_dict_list:
           ticker = ticker_dict['Ticker']
-          #if ticker in stock_list_snp:
-          print(strategy, ticker)
-          df = get_stock_price(ticker, freq = freq)
-          ticker_dict['Volume'] = df['Volume'][-1]
-          if (ticker_dict.get('FS Bar', None)):
-              fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
-          else:
-              fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
-          ticker_dict_no_prices = ticker_dict.copy()
-          prices_dict = ticker_dict_no_prices.pop('Prices Entry')
-          ticker_dict_no_prices.pop('Levels')
-          htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-          htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
-          f.write(htmlText2 + htmlText3)
-          f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+          if not ticker.endswith('.HK'):
+              #if ticker in stock_list_snp:
+              print(strategy, ticker)
+              df = get_stock_price(ticker, freq = freq)
+              ticker_dict['Volume'] = df['Volume'][-1]
+              if (ticker_dict.get('FS Bar', None)):
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+              else:
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
+              ticker_dict_no_prices = ticker_dict.copy()
+              prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+              ticker_dict_no_prices.pop('Levels')
+              htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+              htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
+              f.write(htmlText2 + htmlText3)
+              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+
+    
+with open('interested_tickers_hk.html', 'a') as f:
+    f.truncate(0) # clear file if something is already written on it
+    #title = "<h1>Tickers</h1>"
+    #f.write(title)
+    updated = "<h3>Last updated: <span id='timestring'></span></h3>"
+    # GitHub Actions server timezone may not be at the same timezone of person opening the page on browser
+    # hence Javascript code is written below to convert to client timezone before printing it on
+    current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
+    htmlLines = []
+    for textLine in pprint.pformat(flip_dict).splitlines():
+      htmlLines.append('<br/>%s' % textLine) # or something even nicer
+    htmlText = '\n'.join(htmlLines)
+
+    f.write(updated + current_time + htmlText)
+    for strategy, ticker_dict_list in all_dict.items():
+      f.write(f"<h2>{strategy}</h2>")
+      for ticker_dict in ticker_dict_list:
+          ticker = ticker_dict['Ticker']
+          if ticker.endswith('.HK'):
+              #if ticker in stock_list_snp:
+              print(strategy, ticker)
+              df = get_stock_price(ticker, freq = freq)
+              ticker_dict['Volume'] = df['Volume'][-1]
+              if (ticker_dict.get('FS Bar', None)):
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+              else:
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
+              ticker_dict_no_prices = ticker_dict.copy()
+              prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+              ticker_dict_no_prices.pop('Levels')
+              htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+              htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
+              f.write(htmlText2 + htmlText3)
+              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+
+
+with open('interested_tickers_snp.html', 'a') as f:
+    f.truncate(0) # clear file if something is already written on it
+    #title = "<h1>Tickers</h1>"
+    #f.write(title)
+    updated = "<h3>Last updated: <span id='timestring'></span></h3>"
+    # GitHub Actions server timezone may not be at the same timezone of person opening the page on browser
+    # hence Javascript code is written below to convert to client timezone before printing it on
+    current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
+    htmlLines = []
+    for textLine in pprint.pformat(flip_dict).splitlines():
+      htmlLines.append('<br/>%s' % textLine) # or something even nicer
+    htmlText = '\n'.join(htmlLines)
+
+    f.write(updated + current_time + htmlText)
+    for strategy, ticker_dict_list in all_dict.items():
+      f.write(f"<h2>{strategy}</h2>")
+      for ticker_dict in ticker_dict_list:
+          ticker = ticker_dict['Ticker']
+          #if not ticker.endswith('.HK'):
+          if ticker in stock_list_snp:
+              print(strategy, ticker)
+              df = get_stock_price(ticker, freq = freq)
+              ticker_dict['Volume'] = df['Volume'][-1]
+              if (ticker_dict.get('FS Bar', None)):
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+              else:
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
+              ticker_dict_no_prices = ticker_dict.copy()
+              prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+              ticker_dict_no_prices.pop('Levels')
+              htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+              htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
+              f.write(htmlText2 + htmlText3)
+              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+
+    
+
+
 
 
