@@ -82,26 +82,77 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 #   return df
 
 # get stock prices using yahooquery library
-def get_stock_price(symbol, freq = 'day'):
+today = datetime.datetime.today()
+string_today = today.strftime('%Y-%m-%d')
+string_1y_ago = (today - relativedelta(years=1)).strftime('%Y-%m-%d')
+string_4y_ago = (today - relativedelta(years=4)).strftime('%Y-%m-%d')
+string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
+# end_date = '2022-4-17'
+
+# tickers = ['MA', 'META', 'V', 'AMZN', 'JPM', 'BA']
+# #stocks_df = DataReader(tickers, 'yahoo', start = start_date, end = end_date)['Adj Close']
+# #stocks_df = yf.download(tickers, start=start_date)
+
+# df = yf.download("BA", start=start_date)
+# df['Date'] = df.index
+# df.head()
+
+
+# # get stock prices using yfinance library
+# def get_stock_price(symbol, freq = 'day'):
+#   if freq == 'week':
+#     df = yf.download(symbol, start=string_4y_ago, threads= False, progress=False, interval='1wk')
+#   elif freq == 'day':
+#     df = yf.download(symbol, start=string_1y_ago, threads= False, progress=False, interval='1d')
+#   elif freq == 'min':
+#     df = yf.download(symbol, start=string_5d_ago, threads= False, progress=False, interval='30m')
+#   df['Date'] = pd.to_datetime(df.index)
+#   df['Date'] = df['Date'].apply(mpl_dates.date2num)
+#   df = df.loc[:,['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+#   df['ATR20'] = pta.atr(df['High'], df['Low'], df['Close'], window=20, fillna=False, mamode = 'ema')
+#   df['SMA20'] = df.ta.sma(20)
+#   df['SMA50'] = df.ta.sma(50)
+#   df['SMA100'] = df.ta.sma(100)
+#   df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
+#   return df
+
+# get stock prices using yfinance library
+def get_stock_price(symbol, freq = '2day'):
   ticker = yahooquery.Ticker(symbol, asynchronous=True)
   if freq == 'week':
     df = ticker.history(period='4y', interval='1wk')
+    df = df.loc[symbol]
     # df = yf.download(symbol, start=string_4y_ago, threads= False, progress=False, interval='1wk')
-  elif freq == 'day':
+  elif freq == '2day': # resample to 2 days
     df = ticker.history(period='1y', interval='1d')
+    df_raw = df.loc[symbol]# Resample to 4-hour intervals
+    df_raw.index = pd.to_datetime(df_raw.index)
+    df = df_raw.resample('2D').agg({
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volume': 'sum',
+    })
+    # Drop rows with all NaN values if any
+    df.dropna(how='any', inplace=True) # since volume will not be NA and will be 0
     #df = yf.download(symbol, start=string_1y_ago, threads= False, progress=False, interval='1d')
   elif freq == 'min':
     df = ticker.history(period='5d', interval='1m')
+    df = df.loc[symbol]
     #df = yf.download(symbol, start=string_5d_ago, threads= False, progress=False, interval='30m')
-  df = df.loc[symbol]
+    
   df.columns = [col.title() for col in df.columns]
   df['Date'] = pd.to_datetime(df.index)
   df['Date'] = df['Date'].apply(mpl_dates.date2num)
   df = df.loc[:,['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
   df['ATR20'] = pta.atr(df['High'], df['Low'], df['Close'], window=20, fillna=False, mamode = 'ema')
-  df['SMA20'] = df.ta.sma(20)
-  df['SMA50'] = df.ta.sma(50)
-  df['SMA100'] = df.ta.sma(100)
+  #df['SMA20'] = df.ta.sma(20)
+  # df['SMA50'] = df.ta.sma(50)
+  # df['SMA100'] = df.ta.sma(100)
+  df['SMA20'] = df['Close'].rolling(20).mean()
+  df['SMA50'] = df['Close'].rolling(50).mean()
+  df['SMA100'] = df['Close'].rolling(100).mean()
   df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
   return df
 
