@@ -334,6 +334,18 @@ def find_levels(df):
 
     return levels_low, levels_high
 
+def exe_bull(df, i):
+    pin = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3) and ((df['Open'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
+    markup = (df['Close'][i] > df['Open'][i]) and ((df['Close'][i] - df['Open'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
+    icecream = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3) and ((df['Close'][i] - df['Open'][i])/(df['High'][i] - df['Low'][i]) >= 1/2)
+    return pin or markup # or icecream
+    
+def exe_bear(df, i):
+    pin = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3) and ((df['Open'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3)
+    markup = (df['Close'][i] < df['Open'][i]) and ((df['Open'][i] - df['Close'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
+    icecream = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3) and ((df['Open'][i] - df['Close'][i])/(df['High'][i] - df['Low'][i]) >= 1/2)
+    return pin or markup # or icecream
+
 # v5, doesnt make sense to have more than swing 4, because swing 5 onwards is too late if swing 5 is below LP, since must be within 4 bar close back above
 # to check: lowest(low, 2) in TOS means today and yesterday only, 2 is including the current bar
 # lowest(low[3], 3) means from 3 days ago to 5 days ago, 5, 4, 3, days including 3
@@ -349,7 +361,8 @@ def find_levels(df):
 # TODO: good to include at LP it touches to current price, what is the lowest, is it 50%
 # TODO: 1 bar can also be UR, is this already in the code?
 def bullish_dr1(df,i, drop_days=3): # i should be -1 for most recent setup, for backtesting, can be changed
-  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin and bullish ice cream both covered
+  #exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin and bullish ice cream both covered
+  exe = exe_bull(df, i)
   price_cond = df['Close'][i] > 2
   vol = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
   #drop_days = 3 # smaller means steeper
@@ -399,7 +412,8 @@ def bullish_dr1(df,i, drop_days=3): # i should be -1 for most recent setup, for 
 # exit rule, SL above exe, or recent swing high, TP to project, to enter based on exe, half of exe from high to mid of exe
 
 def bearish_ur1(df,i,rise_days=3): # i should be -1 for most recent setup, for backtesting, can be changed
-  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  #exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  exe = exe_bear(df, i)
   price_cond = df['Close'][i] > 2
   vol = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
   #rise_days = 3 # smaller means steeper
@@ -443,7 +457,8 @@ def bearish_ur1(df,i,rise_days=3): # i should be -1 for most recent setup, for b
 
 def bearish_fs(df,i): # combine with force top or test SMA20/50
   # maybe out rectangle to draw
-  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  #exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  exe = exe_bear(df, i)
   price_cond = df['Close'][i] > 2
   vol = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
 
@@ -476,7 +491,8 @@ def bearish_fs(df,i): # combine with force top or test SMA20/50
   #return (test or fs_3_bar or fs_4_bar or fs_5_bar or fs_6_bar)
 
 def bullish_fs(df,i): # combine with force bottom or test SMA20/50
-  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin
+  #exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin
+  exe = exe_bull(df, i)
   price_cond = df['Close'][i] > 2
   vol = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
 
@@ -595,7 +611,8 @@ def get_enter_prices(df, ticker, direction = 'Long', risk = 300, currency = 'USD
 
 # test_sma_above
 def test_sma_above(df, i, j): # combine with force bottom or trend
-  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin
+  #exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3 # this is a boolean, bullish pin
+  exe = exe_bull(df, i)
   price_cond = df['Close'][i] > 2
   trend_cond = df['SMA20'][i] > df['SMA50'][i] # current price can be below SMA, need not be above, just need to be near
   trend_cond2 = df['SMA50'][i] > df['SMA100'][i]
@@ -624,7 +641,8 @@ def test_sma_above(df, i, j): # combine with force bottom or trend
 
 # test_sma_below
 def test_sma_below(df, i, j): # combine with force bottom or trend
-  exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  #exe = (df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3 # this is a boolean, bearish pin
+  exe = exe_bear(df, i)
   price_cond = df['Close'][i] > 2
   # maybe add 50 < 100 also
   trend_cond = df['SMA20'][i] < df['SMA50'][i] # current price can be below SMA, need not be above, just need to be near
