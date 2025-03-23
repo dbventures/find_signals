@@ -1039,12 +1039,12 @@ for strategy, ticker_dict_list in all_dict.items():
             flip_dict[ticker_dict['Ticker']]= [strategy]
 
 # # Store data (serialize)
-with open('interested_tickers.pkl', 'wb') as handle:
+with open('interested_tickers.pickle', 'wb') as handle:
     pickle.dump(all_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 # # Store data (serialize)
-with open('flip_dict.pkl', 'wb') as handle:
+with open('flip_dict.pickle', 'wb') as handle:
     pickle.dump(flip_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # # Load data (deserialize)
