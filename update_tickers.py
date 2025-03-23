@@ -969,7 +969,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
 #   fig.show()
 
 #for visualization
-def plot_all(levels, df, ticker, fs_bar = None):
+def plot_all(levels, df, day, ticker, fs_bar = None):
     #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
     fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
                           go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
@@ -980,7 +980,7 @@ def plot_all(levels, df, ticker, fs_bar = None):
         fig.add_shape(type="line", x0=level[0], x1=df.index[-1], y0=level[1], y1 =level[1],
                       line_width=1, line_dash="dash", line_color="blue")
     if fs_bar:
-        fig.add_shape(type="rect", x0=df.index[-fs_bar], x1=df.index[-1], y0=df['Low'][-fs_bar], y1=df['High'][-fs_bar],
+        fig.add_shape(type="rect", x0=df.index[day+1-fs_bar], x1=df.index[day], y0=df['Low'][day+1-fs_bar], y1=df['High'][day+1-fs_bar],
                       line_width=1, line_dash="solid", line_color="yellow", fillcolor="yellow", opacity=0.3)
 
     fig.update_layout(title = ticker, height=800)
@@ -1085,7 +1085,7 @@ print(dt_string, timezone_string)
 # exporting
 import pprint
 #for visualization
-def plot_all_with_return(levels, df, ticker, fs_bar = None):
+def plot_all_with_return(levels, df, day, ticker, fs_bar = None):
     #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
     fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
                           go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
@@ -1094,7 +1094,7 @@ def plot_all_with_return(levels, df, ticker, fs_bar = None):
         fig.add_shape(type="line", x0=level[0], x1=df.index[-1], y0=level[1], y1 =level[1],
                       line_width=1, line_dash="dash", line_color="blue")
     if fs_bar:
-        fig.add_shape(type="rect", x0=df.index[-fs_bar], x1=df.index[-1], y0=df['Low'][-fs_bar], y1=df['High'][-fs_bar],
+        fig.add_shape(type="rect", x0=df.index[day+1-fs_bar], x1=df.index[day], y0=df['Low'][day+1-fs_bar], y1=df['High'][day+1-fs_bar],
                       line_width=1, line_dash="solid", line_color="yellow", fillcolor="yellow", opacity=0.3)
 
     fig.update_layout(title = ticker, height=800)
@@ -1127,9 +1127,9 @@ with open('interested_tickers.html', 'a') as f:
               df = get_stock_price(ticker, freq = freq)
               ticker_dict['Volume'] = df['Volume'][-1]
               if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
               else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy)
               ticker_dict_no_prices = ticker_dict.copy()
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
@@ -1163,9 +1163,9 @@ with open('interested_tickers_hk.html', 'a') as f:
               df = get_stock_price(ticker, freq = freq)
               ticker_dict['Volume'] = df['Volume'][-1]
               if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
               else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy)
               ticker_dict_no_prices = ticker_dict.copy()
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
@@ -1199,9 +1199,9 @@ with open('interested_tickers_snp.html', 'a') as f:
               df = get_stock_price(ticker, freq = freq)
               ticker_dict['Volume'] = df['Volume'][-1]
               if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
               else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,ticker + ': ' + strategy)
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy)
               ticker_dict_no_prices = ticker_dict.copy()
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
