@@ -790,7 +790,7 @@ len(stock_list_all)
 # script to scan everything for futures with position sizing
 # script to scan everything for forex 4h timeframe with position sizing
 
-day = -10 # minus 1 means most recent date
+day = -20 # minus 1 means most recent date
 freq = '2day'
 rise_drop_days = 5
 sma_start = -1
