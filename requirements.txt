@@ -1,15 +1,15 @@
 pandas==1.5.0
 numpy==1.22.4
-plotly
+plotly==5.7.0
 matplotlib==3.4.3
 seaborn
 gunicorn
 yfinance
 mplfinance
 pandas-ta
-mplfinance
+mplfinance==0.12.10b0
 lxml
-yahooquery
+yahooquery==2.3.1
 
 
 
