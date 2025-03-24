@@ -62,7 +62,7 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # In[ ]:
 
 
-day = -33 # minus 1 means most recent date
+day = -32 # minus 1 means most recent date
 freq = '2day'
 
 # for ur dr
