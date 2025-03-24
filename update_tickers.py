@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
 # Commented out IPython magic to ensure Python compatibility.
 import pandas_ta as pta
 import yfinance as yf
@@ -46,12 +52,34 @@ def get_jsonparsed_data(url):
 # To reference specific dates when scraping for stock prices
 import datetime
 from dateutil.relativedelta import relativedelta
-
 today = datetime.datetime.today()
 string_today = today.strftime('%Y-%m-%d')
 string_1y_ago = (today - relativedelta(years=1)).strftime('%Y-%m-%d')
 string_4y_ago = (today - relativedelta(years=4)).strftime('%Y-%m-%d')
 string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
+
+
+# In[2]:
+
+
+day = -1 # minus 1 means most recent date
+freq = '2day'
+rise_drop_days = 5
+sma_start = day+1-1 # for uc dc
+sma_end = day+1-4 # for uc dc
+recent_swing_start = day+1-5
+recent_swing_end = day+1-30
+risk = 300
+#max_breach = day+1-6 # allow recent 6 days to breach level (for force bottom scenario)
+max_breach = -6 # no need day + 1 as we are only passing until that days data to the find_levels() functions below
+# maybe change above to let find_levels() take in days as argument? then will be same format as other functions
+prices_entry = '0.25'
+risk_reward_ratio = 2
+
+
+# In[3]:
+
+
 # end_date = '2022-4-17'
 
 # tickers = ['MA', 'META', 'V', 'AMZN', 'JPM', 'BA']
@@ -80,6 +108,10 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 #   df['SMA100'] = df.ta.sma(100)
 #   df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
 #   return df
+
+
+# In[4]:
+
 
 # get stock prices using yahooquery library
 today = datetime.datetime.today()
@@ -89,32 +121,15 @@ string_4y_ago = (today - relativedelta(years=4)).strftime('%Y-%m-%d')
 string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # end_date = '2022-4-17'
 
-# tickers = ['MA', 'META', 'V', 'AMZN', 'JPM', 'BA']
-# #stocks_df = DataReader(tickers, 'yahoo', start = start_date, end = end_date)['Adj Close']
-# #stocks_df = yf.download(tickers, start=start_date)
 
-# df = yf.download("BA", start=start_date)
-# df['Date'] = df.index
-# df.head()
+# In[ ]:
 
 
-# # get stock prices using yfinance library
-# def get_stock_price(symbol, freq = 'day'):
-#   if freq == 'week':
-#     df = yf.download(symbol, start=string_4y_ago, threads= False, progress=False, interval='1wk')
-#   elif freq == 'day':
-#     df = yf.download(symbol, start=string_1y_ago, threads= False, progress=False, interval='1d')
-#   elif freq == 'min':
-#     df = yf.download(symbol, start=string_5d_ago, threads= False, progress=False, interval='30m')
-#   df['Date'] = pd.to_datetime(df.index)
-#   df['Date'] = df['Date'].apply(mpl_dates.date2num)
-#   df = df.loc[:,['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-#   df['ATR20'] = pta.atr(df['High'], df['Low'], df['Close'], window=20, fillna=False, mamode = 'ema')
-#   df['SMA20'] = df.ta.sma(20)
-#   df['SMA50'] = df.ta.sma(50)
-#   df['SMA100'] = df.ta.sma(100)
-#   df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
-#   return df
+
+
+
+# In[5]:
+
 
 # get stock prices using yfinance library
 def get_stock_price(symbol, freq = '2day'):
@@ -157,77 +172,39 @@ def get_stock_price(symbol, freq = '2day'):
   return df
 
 
+# In[6]:
+
+
 # get the full stock list of S&P 500
 payload=pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
 stock_list_snp = payload[0]['Symbol'].values.tolist()
 len(stock_list_snp)
 
-# crypto_list = []
 
-# url = 'https://web-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+# In[7]:
 
-# params = {
-#         'limit': 2000,
-#     }
-
-# r = requests.get(url, params=params)
-
-# data = r.json()
-
-# for number, item in enumerate(data['data']):
-#     #print(f"{start+number:4} | {item['symbol']:5} | {item['date_added'][:10]}")
-#     #print(item['symbol'])
-#     crypto_list.append(item['symbol'] + '-USD')
-
-# for symbol in crypto_list:
-#     try:
-#         get_stock_price(symbol)
-#     except:
-#         crypto_list.remove(symbol)
-
-# print(len(crypto_list))
-
-# with open("crypto_list.txt", 'w') as f:
-#     for ticker in crypto_list:
-#         f.write(str(ticker) + '\n')
-
-# crypto_list = []
-
-# url = 'https://web-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
-
-# params = {
-#         'limit': 80,
-#     }
-
-# r = requests.get(url, params=params)
-
-# data = r.json()
-
-# for number, item in enumerate(data['data']):
-#     #print(f"{start+number:4} | {item['symbol']:5} | {item['date_added'][:10]}")
-#     #print(item['symbol'])
-#     if "US" not in item['symbol']:
-#         crypto_list.append(item['symbol'] + '-USD')
-
-# for symbol in crypto_list:
-#     try:
-#         get_stock_price(symbol)
-#     except:
-#         crypto_list.remove(symbol)
-
-# print(len(crypto_list))
-
-# # with open("crypto_list.txt", 'w') as f:
-# #     for ticker in crypto_list:
-# #         f.write(str(ticker) + '\n')
 
 futures_list = ['YM=F','ES=F','NQ=F','TF=F', # index
                 'CL=F','NG=F', # energy
                 'GC=F','SI=F','HG=F','PL=F','PA=F', # metal
                 '6E=F','6B=F','6A=F','6C=F','6S=F','6J=F'] # forex
 
-forex_list = ['EURUSD=T','GBPUSD=T','AUDUSD=T','USDJPY=T','CHFUSD=T','CADUSD=T','NZDUSD=T',
-              'EURGBP=T','EURJPY=T','EURAUD=T','GBPJPY=T','GBPAUD=T','AUDNZD=T','AUDJPY=T']
+# forex_list = ['EURUSD=T','GBPUSD=T','AUDUSD=T','USDJPY=T','CHFUSD=T','CADUSD=T','NZDUSD=T',
+#               'EURGBP=T','EURJPY=T','EURAUD=T','GBPJPY=T','GBPAUD=T','AUDNZD=T','AUDJPY=T']
+
+forex_list = [
+    "GBPUSD=X",
+    "AUDUSD=X",
+    "USDCAD=X",
+    "NZDUSD=X",
+    "USDCHF=X",
+    "USDJPY=X",
+    "EURUSD=X"
+]
+
+
+# In[8]:
+
 
 # os.environ['FMP_API_KEY'] = 'b187d0baf2c855400870f859dac36b99'
 # apiKey = os.environ['FMP_API_KEY']
@@ -236,16 +213,40 @@ forex_list = ['EURUSD=T','GBPUSD=T','AUDUSD=T','USDJPY=T','CHFUSD=T','CADUSD=T',
 # df_all_stocks.to_csv("all_stocks_info.csv")
 # df_all_stocks
 
-# df_all_stocks = pd.read_csv("all_stocks_info.csv")
-# #print(df_all_stocks.exchange.value_counts()[:20]) # print top exchanges by stocks
-# stock_exchanges = ["NASDAQ", "New York Stock Exchange", "HKSE"]
-# df_stocks_filtered = df_all_stocks[(df_all_stocks["exchange"].isin(stock_exchanges)) & (df_all_stocks["type"]=='stock')] #9k+ stocks here already
-# stock_list = list(df_stocks_filtered.symbol.unique())
-# print(len(stock_list))
 
-# with open("stock_list.txt", 'w') as f:
-#     for ticker in stock_list:
-#         f.write(str(ticker) + '\n')
+# In[9]:
+
+
+# df_all_stocks[df_all_stocks['symbol']=='AAPL']
+
+
+# In[10]:
+
+
+# list(df_all_stocks['exchange'].unique())
+
+
+# In[11]:
+
+
+df_all_stocks = pd.read_csv("all_stocks_info.csv")
+#print(df_all_stocks.exchange.value_counts()[:20]) # print top exchanges by stocks
+stock_exchanges = [
+    "NASDAQ", "New York Stock Exchange", 'NYSE', 'AMEX',
+    "HKSE", "NASDAQ Global Select", 
+    'NASDAQ Stock Exchange', 'NASDAQ Capital Markets','NASDAQ Capital Market',
+    'NASDAQ Stock Market', 'Nasdaq']
+df_stocks_filtered = df_all_stocks[(df_all_stocks["exchange"].isin(stock_exchanges)) & (df_all_stocks["type"]=='stock')] #9k+ stocks here already
+stock_list = list(df_stocks_filtered.symbol.unique())
+print(len(stock_list))
+
+
+# In[12]:
+
+
+with open("stock_list.txt", 'w') as f:
+    for ticker in stock_list:
+        f.write(str(ticker) + '\n')
 
 # crypto_list = []
 # with open("crypto_list.txt", 'r') as f:
@@ -257,14 +258,54 @@ with open("stock_list.txt", 'r') as f:
     for line in f:
         stock_list.append(line.rstrip('\n'))
 
-len(stock_list)
+print(len(stock_list))
 
 stock_list_all = set(stock_list_snp).union(set(stock_list))
 
 # for debugging only
 # stock_list_all = list(stock_list_all)[:10]
 
-#method 1: fractal candlestick pattern
+
+# In[13]:
+
+
+# stock_list_all = list(stock_list_all)[:200]
+
+
+# In[14]:
+
+
+# # for debugging only
+# stock_list_all = ['SAM',
+#  'ORLY',
+#  'LEVI',
+#  'FIGS',
+#  'AVNT',
+#  'MAIN',
+#  'FCPT',
+#  'DD',
+#  'WH',
+#  'HGV',
+#  'AMCR',
+#  'SPXC',
+#  'ABG',
+#  'CTO',
+#  'BIRK',
+#  'SLGN',
+#  'R',
+#  'CSCO',
+#  'TTE',
+#  'USM',
+#  'JCI',
+#  'YMM',
+#  'HWM',
+#  '2313.HK']
+
+
+# In[15]:
+
+
+# method 1: fractal candlestick pattern
 # determine bullish fractal
 def is_support(df,i):
     cond1 = df['Low'][i] < df['Low'][i-1]
@@ -290,9 +331,6 @@ def is_resistance(df,i):
 
     return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
 
-
-
-
 # to make sure the new level area does not exist already
 def is_far_from_level(value, levels, df):
   ave =  np.mean(df['High'] - df['Low'])
@@ -310,7 +348,7 @@ def remove_previous(value, levels, low_or_high):
   for remove in to_remove:
     levels.remove(remove)
 
-def find_levels(df):
+def find_levels(df, max_breach):
     # a list to store resistance and support levels
     levels_low = []
     levels_high = []
@@ -323,16 +361,26 @@ def find_levels(df):
             #if is_far_from_level(low, levels_low, df):
             # do not use most recent swing high or low to remove it, because the most recent one may be a force top/bottom but it overrides the previous one
             # either that or just don't find LP for most recent 10 bars in the range above.
-            remove_previous(low, levels_low, 'low') # delete previous if this swing low is below previous, as previous is broken
-            levels_low.append((df.index[i], low))
+            #remove_previous(low, levels_low, 'low') # delete previous if this swing low is below previous, as previous is broken
+            if df.loc[df.index[i]:df.index[max_breach]]['Low'].min() < low: # do not append if this has been breached later
+                pass
+            else:
+                levels_low.append((df.index[i], low))
 
         elif is_resistance(df, i):
             high = df['High'][i]
             #if is_far_from_level(high, levels_high, df):
-            remove_previous(high, levels_high, 'high')
-            levels_high.append((df.index[i], high))
-
+            #remove_previous(high, levels_high, 'high')
+            if df.loc[df.index[i]:df.index[max_breach]]['High'].max() > high: # do not append if this has been breached later
+                pass
+            else:
+                levels_high.append((df.index[i], high))
+                                    
     return levels_low, levels_high
+
+
+# In[16]:
+
 
 def exe_bull(df, i):
     pin = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3) and ((df['Open'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
@@ -517,23 +565,21 @@ def bullish_fs(df,i): # combine with force bottom or test SMA20/50
 
 # for force bottom, minimum of all lows go below LP (support level), then final close is above then ok
 
-
-
-def test_force_top(df, levels): # should give it levels_high, 5th bar should be below, 4th bar onwards anything above
+def test_force_top(df, day, levels): # should give it levels_high, 5th bar should be below, 4th bar onwards anything above
   for level in levels:
-      not_too_late = df['High'][-5] < level[1] # 5th bar should be still below, haven't break yet, if not, its too late
-      went_above = df['High'][-4:].max() > level[1] # 4 bars at any point went above level
-      close_below = df['Close'][-1] <= level[1] # last bar close back below or equal
+      not_too_late = df['High'][day+1-5] < level[1] # 5th bar should be still below, haven't break yet, if not, its too late
+      went_above = df['High'][day+1-4:day].max() > level[1] # 4 bars at any point went above level
+      close_below = df['Close'][day+1-1] <= level[1] # last bar close back below or equal
       #print(f"Testing for levels {level}, 5th bar haven't break {not_too_late}, went above {went_above}, close below {close_below}")
       if not_too_late and went_above and close_below:
         return True, level # must know which is the level to plot it out
   return False, False
 
-def test_force_bottom(df, levels): # should give it levels_low
+def test_force_bottom(df, day, levels): # should give it levels_low
   for level in levels:
-      not_too_late = df['Low'][-5] > level [1]
-      went_below = df['Low'][-4:].min() < level[1]
-      close_above = df['Close'][-1] >= level[1]
+      not_too_late = df['Low'][day+1-5] > level [1]
+      went_below = df['Low'][day+1-4:day].min() < level[1]
+      close_above = df['Close'][day+1-1] >= level[1]
       #print(f"Testing for levels {level}, 5th bar haven't break {not_too_late}, went below {went_below}, close above {close_above}")
       if not_too_late and went_below and close_above:
         return True, level # must know which is the level to plot it out
@@ -550,7 +596,7 @@ def check_50_steepness_bottom(df, swing_bar, level, drop_days = 3):
 # # add criteria, entry and stop loss less than 1 ATR?
 # can write streamlit app to calculate price also
 # add override enter price?
-def get_enter_prices(df, ticker, direction = 'Long', risk = 300, currency = 'USD', ratio = 2, enter_override = None, stop_loss_buffer = 0.02): # should give it levels_low
+def get_enter_prices(df, day, ticker, direction = 'Long', risk = 300, currency = 'USD', ratio = 2, enter_override = None, stop_loss_buffer = 0.02): # should give it levels_low
     if ticker[-2:] == 'HK':
         currency = 'HKD'
     else:
@@ -565,15 +611,15 @@ def get_enter_prices(df, ticker, direction = 'Long', risk = 300, currency = 'USD
     if direction == 'Long':
 
         enter_dict = {
-            '0.25':((df['High'][-1] - df['Low'][-1]) * 0.75) + df['Low'][-1],
-            '0.5':((df['High'][-1] - df['Low'][-1]) * 0.5) + df['Low'][-1],
-            'close': df['Close'][-1]
+            '0.25':((df['High'][day] - df['Low'][day]) * 0.75) + df['Low'][day],
+            '0.5':((df['High'][day] - df['Low'][day]) * 0.5) + df['Low'][day],
+            'close': df['Close'][day]
             }
 
         if enter_override:
             enter_dict['override'] = enter_override
         for key, enter in enter_dict.items():
-            stop_loss = df['Low'][-5:].min() - stop_loss_buffer
+            stop_loss = df['Low'][day+1-5:day].min() - stop_loss_buffer # lowest within 5 days, most recent "swing low"
             take_profit = (enter - stop_loss) * ratio + enter
             n_shares = risk/(enter - stop_loss)
             if (enter - stop_loss) > df['ATR20'][-1]:
@@ -586,15 +632,15 @@ def get_enter_prices(df, ticker, direction = 'Long', risk = 300, currency = 'USD
 
     elif direction == 'Short':
         enter_dict = {
-            '0.25':((df['High'][-1] - df['Low'][-1]) * 0.25) + df['Low'][-1],
-            '0.5':((df['High'][-1] - df['Low'][-1]) * 0.5) + df['Low'][-1],
-            'close': df['Close'][-1]
+            '0.25':((df['High'][day] - df['Low'][day]) * 0.25) + df['Low'][day],
+            '0.5':((df['High'][day] - df['Low'][day]) * 0.5) + df['Low'][day],
+            'close': df['Close'][day]
             }
 
         if enter_override:
             enter_dict['override'] = enter_override
         for key, enter in enter_dict.items():
-            stop_loss = df['High'][-5:].max() + stop_loss_buffer
+            stop_loss = df['High'][day+1-5:day].max() + stop_loss_buffer
             take_profit = enter - (stop_loss - enter) * ratio
             n_shares = risk/(stop_loss - enter)
             if (stop_loss - enter) > df['ATR20'][-1]:
@@ -693,7 +739,6 @@ def find_recent_levels(df, i, j):
             remove_previous(high, levels_high, 'high')
             recent_highs.append((k, high))
 
-
     return recent_lows, recent_highs
 
 # any bar between sma start and end test sma
@@ -702,6 +747,7 @@ def bullish_uc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
     above_sma = test_sma_above(df, sma_start, sma_end)
     if above_sma: # don't bother testing for lows and highs if not even testing sma
         recent_lows, recent_highs = find_recent_levels(df, recent_swing_start, recent_swing_end)
+        # print(recent_lows, recent_highs)
         if (len(recent_lows) > 0) and (len(recent_highs) > 0):
             most_recent_low = recent_lows[0]
             most_recent_high = recent_highs[0]
@@ -771,7 +817,16 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
                                 return delay_cond, (df.index[most_recent_low_index], most_recent_low[1]), (df.index[most_recent_high_index], most_recent_high[1])
     return False, None, None # anything not met, return False
 
+
+
+# In[17]:
+
+
 len(stock_list_all)
+
+
+# In[ ]:
+
 
 # TODO: make script for crypt as additional page
 # make script for short term only on S&P DR1X # done
@@ -784,20 +839,11 @@ len(stock_list_all)
 
 # bearish/bullish FS test MA
 # both below similar
-# UC1/DC1
+# UC1/DC1 # still need to test for flush up
 # UC2/DC2
 
 # script to scan everything for futures with position sizing
 # script to scan everything for forex 4h timeframe with position sizing
-
-day = -30 # minus 1 means most recent date
-freq = '2day'
-rise_drop_days = 5
-sma_start = -1
-sma_end = -4
-recent_swing_start = -5
-recent_swing_end = -30
-risk = 300
 
 # one dict for one type, list to store all dicts?
 
@@ -819,20 +865,20 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
     bullish_fs_result, which_bar_bull_fs = bullish_fs(df,day)
     #print(ticker)
     bullish_uc1_result, most_recent_low, most_recent_high = bullish_uc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
-
+    
+    
     if bullish_uc1_result:
         print("######## Bullish UC1 Signal:", i, ticker)
         ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Long'}
-        ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = 2)
+        ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
         all_dict['UC1'].append(ticker_df)
-
+    
     bearish_dc1_result, most_recent_low, most_recent_high = bearish_dc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
-
-
+        
     if bearish_dc1_result:
         print("######## Bearish DC1 Signal:", i, ticker)
         ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Short'}
-        ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = 2)
+        ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
         all_dict['DC1'].append(ticker_df)
 
     if bearish_ur_result:
@@ -841,19 +887,19 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         print("Bearish UR1 Signal:", i, ticker)
         print("Swing Bar:", swing_bar_ur)
 
-        levels_low, levels_high = find_levels(df)
+        levels_low, levels_high = find_levels(df.iloc[:day], max_breach)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_high, 'Swing Bar': swing_bar_ur, 'Direction': 'Short'}
 
         # force_top, level = test_force_top(df.iloc[i-swing_bar:], levels_high)
-        force_top, level = test_force_top(df, levels_high)
+        force_top, level = test_force_top(df, day, levels_high)
 
         if force_top:
             print("######## Force top:", level)
             ticker_df['Force Top'] = level
             ticker_df['Steepness'] = check_50_steepness_top(df, swing_bar_ur, level, rise_days = rise_drop_days)
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = 2)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
             all_dict['UR1'].append(ticker_df)
         elif force_top == False:
             print("No force top")
@@ -866,27 +912,23 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         #dr.append(ticker)
         print("Bullish DR1 Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_dr)
-        levels_low, levels_high = find_levels(df)
+        levels_low, levels_high = find_levels(df.iloc[:day], max_breach)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_low, 'Swing Bar': swing_bar_dr, 'Direction': 'Long'}
 
-        force_bottom, level = test_force_bottom(df, levels_low)
+        force_bottom, level = test_force_bottom(df, day, levels_low)
 
 
         if force_bottom: # true if have, None if don't have
             print("######## Force bottom:", level)
             ticker_df['Force Bottom'] = level # level is tuple with datetime index and level itself
             ticker_df['Steepness'] = check_50_steepness_bottom(df, swing_bar_dr, level, drop_days = rise_drop_days)
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = 2)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
             all_dict['DR1'].append(ticker_df)
         elif force_bottom == False:
             print("No force bottom")
             ticker_df['Force Bottom'] = False
-
-
-
-
 
     if bearish_fs_result:
 
@@ -894,8 +936,9 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         print("Bearish FS Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_ur)
 
-        levels_low, levels_high = find_levels(df)
-        below_sma = test_sma_below(df, -1,-6)
+        levels_low, levels_high = find_levels(df.iloc[:day], max_breach)
+        below_sma = test_sma_below(df, day, day-5)
+        # downtrend = is_downtrend()
         #dr.append(ticker)
         #print("Bullish FS Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_dr)
@@ -905,12 +948,12 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
                    'Levels': levels_high,
                      'FS Bar': which_bar_bear_fs, 'Direction': 'Short'}
 
-        force_top, level = test_force_top(df, levels_high)
+        force_top, level = test_force_top(df, day, levels_high)
 
         if force_top:
             print("######## Force Top:", level)
             ticker_df['Force Top'] = level
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
             all_dict['bear_fs'].append(ticker_df)
         elif force_bottom == False:
             print("No force top")
@@ -918,7 +961,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
 
         if below_sma:
             print("######## Below SMA Detected")
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
             all_dict['bear_fs_sma'].append(ticker_df)
         elif below_sma == False:
             print("No below SMA")
@@ -928,19 +971,19 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         #dr.append(ticker)
         print("Bullish FS Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_dr)
-        levels_low, levels_high = find_levels(df)
+        levels_low, levels_high = find_levels(df.iloc[:day], max_breach)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_low,
-                     'FS Bar': which_bar_bull_fs, 'Direction': 'Long'}
+                'FS Bar': which_bar_bull_fs, 'Direction': 'Long'}
 
-        force_bottom, level = test_force_bottom(df, levels_low)
-        above_sma = test_sma_above(df, -1, -6)
+        force_bottom, level = test_force_bottom(df, day, levels_low)
+        above_sma = test_sma_above(df, day, day-5)
 
         if force_bottom:
             print("######## Force bottom:", level)
             ticker_df['Force Bottom'] = level
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
             all_dict['bull_fs'].append(ticker_df)
         elif force_bottom == False:
             print("No force bottom")
@@ -948,48 +991,75 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
 
         if above_sma:
             print("######## Above SMA Detected")
-            ticker_df['Prices Entry'] = get_enter_prices(df, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = 2)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
             all_dict['bull_fs_sma'].append(ticker_df)
         elif above_sma == False:
             print("No above SMA")
 
 
   except Exception as e:
-    print(e)
+    print(f'Error for {i} {ticker}: {e}')
 
-# # for visualization
-# def plot_all(levels, df):
-#   fig, ax = plt.subplots(figsize=(5, 2))
-#   candlestick_ohlc(ax,df.values,width=0.6, colorup='green', colordown='red', alpha=1)
-#   #ax = mpf.plot(df[-50:], type='candle', returnfig=True)
-#   date_format = mpl_dates.DateFormatter('%d %b %Y')
-#   ax.xaxis.set_major_formatter(date_format)
-#   for level in levels:
-#     ax.hlines(level[1], xmin = df['Date'][level[0]], xmax = max(df['Date']), colors='blue', linestyle='--')
-#   fig.show()
 
+# In[ ]:
+
+
+# exporting
+import pprint
 #for visualization
-def plot_all(levels, df, day, ticker, fs_bar = None):
+#for visualization in jupyter notebook
+def plot_all_with_return(levels, df, day, ticker, direction, fs_bar = None):
     #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
     fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
-                          go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
-                          go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1))])
-
-
+                          go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1), name='SMA 50'),
+                          go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1), name='SMA 20')
+                         ])
     for level in levels:
-        fig.add_shape(type="line", x0=level[0], x1=df.index[-1], y0=level[1], y1 =level[1],
+        fig.add_shape(type="line", x0=level[0], x1=df.index[day], y0=level[1], y1 =level[1],
                       line_width=1, line_dash="dash", line_color="blue")
     if fs_bar:
         fig.add_shape(type="rect", x0=df.index[day+1-fs_bar], x1=df.index[day], y0=df['Low'][day+1-fs_bar], y1=df['High'][day+1-fs_bar],
                       line_width=1, line_dash="solid", line_color="yellow", fillcolor="yellow", opacity=0.3)
+    
+    if direction == 'Long':
+        arrow_start = df['Low'][day] - df['ATR20'][day]
+        arrow_end = df['Low'][day] - df['ATR20'][day]*0.2
+    else:
+        arrow_start = df['High'][day] + df['ATR20'][day]
+        arrow_end = df['High'][day] + df['ATR20'][day]*0.2
+        
+    day_arrow = go.layout.Annotation(dict(
+                    x=df.index[day],
+                    y=arrow_end,
+                    xref="x", yref="y",
+                    text="",
+                    showarrow=True,
+                    axref="x", ayref='y',
+                    ax=df.index[day],
+                    ay=arrow_start,
+                    arrowhead=2,
+                    arrowwidth=1,
+                    arrowcolor='rgb(0,0,0)',)
+                )
+    fig.update_layout(annotations=[day_arrow])
 
     fig.update_layout(title = ticker, height=800)
     #fig.update_layout(autosize=False, width=500, height=400) # for small
     fig.update_yaxes(fixedrange=False)
-    fig.show()
+    #fig.show()
+    return fig
+
+
+
+# In[ ]:
+
 
 # df = get_stock_price("BJ") # see why it is needed to ignore most recent swing
 # levels_low, levels_high = find_levels(df)
+
+
+# In[ ]:
+
 
 # # test steepness calculation (this is correct)
 
@@ -999,33 +1069,20 @@ def plot_all(levels, df, day, ticker, fs_bar = None):
 # force_top, level = test_force_bottom(df, levels_low)
 # print(force_top, level)
 # check_50_steepness_top(df, swing_bar_dr, level, rise_days = rise_drop_days)
-# # plot_all(levels_low, df, "J", 50)
 
 
-# start_of_swing = -swing_bar_dr - 3 - 3
-#    # return (df['High'][start_of_swing] - level[1]) > 0.5*((df.loc[level[0]:df.index[start_of_swing]]['High'].max()) - level[1])
-# df['High'][start_of_swing:-swing_bar_dr].max()
+# In[ ]:
 
 
+# tickers_test = []
+# for strategy, ticker_dict_list in all_dict.items():
+#   for ticker_dict in ticker_dict_list:
+#       ticker = ticker_dict['Ticker']
+#       tickers_test.append(ticker)
+# tickers_test
 
-# (df['High'][start_of_swing:-swing_bar_dr].max() - level[1]) > 0.5*((df.loc[level[0]:df.index[start_of_swing]]['High'].max()) - level[1])
 
-all_dict
-
-# all_dict_serial = all_dict.copy()
-# for k, ticker_dicts in all_dict_serial.items():
-#     for ticker_dict in ticker_dicts:
-#         if "Levels" in ticker_dict:
-#             ticker_dict['Levels'] = [(str(l[0]), l[1]) for l in ticker_dict['Levels']]
-#         if "Force Top" in ticker_dict:
-#             if ticker_dict['Force Top']:
-#                 ticker_dict['Force Top'] = (str(ticker_dict['Force Top'][0]), ticker_dict['Force Top'][1])
-#         if "Force Bottom" in ticker_dict:
-#             if ticker_dict['Force Bottom']:
-#                 ticker_dict['Force Bottom'] = (str(ticker_dict['Force Bottom'][0]), ticker_dict['Force Bottom'][1])
-#             #print(ticker_dict['Levels'])
-# all_dict_serial
-
+# In[ ]:
 
 
 flip_dict = {}
@@ -1038,6 +1095,10 @@ for strategy, ticker_dict_list in all_dict.items():
         except:
             flip_dict[ticker_dict['Ticker']]= [strategy]
 
+
+# In[ ]:
+
+
 # # Store data (serialize)
 with open('interested_tickers.pickle', 'wb') as handle:
     pickle.dump(all_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -1047,33 +1108,8 @@ with open('interested_tickers.pickle', 'wb') as handle:
 with open('flip_dict.pickle', 'wb') as handle:
     pickle.dump(flip_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-# # Load data (deserialize)
-# with open('tickers.pickle', 'rb') as handle:
-#     unserialized_data = pickle.load(handle)
 
-# tickers = ['FOF', 'DY', 'FSLR', '1316.HK', 'J']
-# # most conservative entry is 0.5, 0.25 is chasing a bit, close is chasing, want to enter asap
-# for strategy, ticker_dict_list in all_dict.items():
-#     for ticker_dict in ticker_dict_list:
-#         ticker = ticker_dict['Ticker']
-#         if ticker in tickers:
-#             df = get_stock_price(ticker, freq = freq)
-
-#             prices_dict = get_enter_prices(df, ticker, direction =  ticker_dict['Direction'],
-#                                                risk = 300, currency = 'HKD', ratio = 2)
-
-#             print(ticker, ticker_dict['Direction'])
-#             print(prices_dict)
-#             print()
-
-
-
-# import json
-# with open('all_dict.json', 'w', encoding='utf-8') as f:
-#     json.dump(all_dict, f, ensure_ascii=False, indent=4)
-
-
-
+# In[ ]:
 
 
 # datetime object containing current date and time
@@ -1082,26 +1118,6 @@ dt_string = now.strftime("%m/%d/%Y %I:%M:%S %p")
 timezone_string = datetime.datetime.now().astimezone().tzname()
 print(dt_string, timezone_string)
 
-# exporting
-import pprint
-#for visualization
-def plot_all_with_return(levels, df, day, ticker, fs_bar = None):
-    #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
-    fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
-                          go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
-                          go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1))])
-    for level in levels:
-        fig.add_shape(type="line", x0=level[0], x1=df.index[-1], y0=level[1], y1 =level[1],
-                      line_width=1, line_dash="dash", line_color="blue")
-    if fs_bar:
-        fig.add_shape(type="rect", x0=df.index[day+1-fs_bar], x1=df.index[day], y0=df['Low'][day+1-fs_bar], y1=df['High'][day+1-fs_bar],
-                      line_width=1, line_dash="solid", line_color="yellow", fillcolor="yellow", opacity=0.3)
-
-    fig.update_layout(title = ticker, height=800)
-    #fig.update_layout(autosize=False, width=500, height=400) # for small
-    fig.update_yaxes(fixedrange=False)
-    #fig.show()
-    return fig
 
 with open('interested_tickers.html', 'a') as f:
     f.truncate(0) # clear file if something is already written on it
@@ -1127,9 +1143,9 @@ with open('interested_tickers.html', 'a') as f:
               df = get_stock_price(ticker, freq = freq)
               ticker_dict['Volume'] = df['Volume'][-1]
               if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, fs_bar = ticker_dict['FS Bar'])
               else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy)
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction)
               ticker_dict_no_prices = ticker_dict.copy()
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
@@ -1138,7 +1154,10 @@ with open('interested_tickers.html', 'a') as f:
               f.write(htmlText2 + htmlText3)
               f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
 
-    
+
+# In[ ]:
+
+
 with open('interested_tickers_hk.html', 'a') as f:
     f.truncate(0) # clear file if something is already written on it
     #title = "<h1>Tickers</h1>"
@@ -1163,9 +1182,9 @@ with open('interested_tickers_hk.html', 'a') as f:
               df = get_stock_price(ticker, freq = freq)
               ticker_dict['Volume'] = df['Volume'][-1]
               if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, fs_bar = ticker_dict['FS Bar'])
               else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy)
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction)
               ticker_dict_no_prices = ticker_dict.copy()
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
@@ -1173,6 +1192,9 @@ with open('interested_tickers_hk.html', 'a') as f:
               htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
               f.write(htmlText2 + htmlText3)
               f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+
+
+# In[ ]:
 
 
 with open('interested_tickers_snp.html', 'a') as f:
@@ -1199,18 +1221,252 @@ with open('interested_tickers_snp.html', 'a') as f:
               df = get_stock_price(ticker, freq = freq)
               ticker_dict['Volume'] = df['Volume'][-1]
               if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, fs_bar = ticker_dict['FS Bar'])
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, fs_bar = ticker_dict['FS Bar'])
               else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy)
+                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction)
               ticker_dict_no_prices = ticker_dict.copy()
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
               htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
               htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
               f.write(htmlText2 + htmlText3)
-              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html file
 
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+# The response you are referring to may be difficult to understand because it is a partial code. You can efficiently add multiple arrows by adding a single arrow setting to the list. x,y is the end point of the arrow and ax,ay is the start point of the arrow. I have modified some of the data presented and added the data to draw the arrows along with the points on the scatterplot.
+
+# fig = px.scatter(df, x='a', y='b', error_y='c')
+
+# fig.update_xaxes(title_font_family="Trebuchet")
+# fig.update_layout(yaxis=dict(scaleanchor="x", scaleratio=1),
+#                   template = "plotly_white",
+#                   title="<b>V</b>",
+#                  )
+# fig.update_layout(xaxis = dict(autorange="reversed"))
+
+# x_end = [1, 2, 2]
+# y_end = [3, 5, 4]
+# x_start = [0, 1, 3]
+# y_start = [4, 4, 4]
+
+# list_of_all_arrows = []
+# for x0,y0,x1,y1 in zip(x_end, y_end, x_start, y_start):
+#     arrow = go.layout.Annotation(dict(
+#                     x=x0,
+#                     y=y0,
+#                     xref="x", yref="y",
+#                     text="",
+#                     showarrow=True,
+#                     axref="x", ayref='y',
+#                     ax=x1,
+#                     ay=y1,
+#                     arrowhead=3,
+#                     arrowwidth=1.5,
+#                     arrowcolor='rgb(255,51,0)',)
+#                 )
+#     list_of_all_arrows.append(arrow)
+
+# fig.update_layout(annotations=list_of_all_arrows)
+# # fig.write_html("Fig.html")
+# fig.show()
+
+
+# In[ ]:
+
+
+# 'Prices Entry': {'0.25': {'enter': 50.147499084472656,
+#      'take_profit': 57.34249786376954,
+#      'stop_loss': 46.549999694824216,
+#      'n_shares': 62.54344355065693,
+#      'more_than_atr': True},
+
+
+# In[ ]:
+
+
+#for visualization in jupyter notebook
+def plot_all(levels, df, day, ticker, direction, entry, fs_bar = None):
+    #fig = go.Figure(data=go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
+                          go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1), name='SMA 50'),
+                          go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1), name='SMA 20')
+                         ])
+    print(entry)
+    fig.add_shape(type="rect", x0=df.index[day], x1=df.index[-1], y0=entry['enter'], y1=entry['take_profit'],
+                      line_width=1, line_dash="solid", line_color="yellow", fillcolor="blue", opacity=0.05)
+    fig.add_shape(type="rect", x0=df.index[day], x1=df.index[-1], y0=entry['enter'], y1=entry['stop_loss'],
+                      line_width=1, line_dash="solid", line_color="yellow", fillcolor="red", opacity=0.05)
     
+    for level in levels:
+        fig.add_shape(type="line", x0=level[0], x1=df.index[day], y0=level[1], y1 =level[1],
+                      line_width=1, line_dash="dash", line_color="blue")
+    if fs_bar:
+        fig.add_shape(type="rect", x0=df.index[day+1-fs_bar], x1=df.index[day], y0=df['Low'][day+1-fs_bar], y1=df['High'][day+1-fs_bar],
+                      line_width=1, line_dash="solid", line_color="yellow", fillcolor="yellow", opacity=0.35)
+    
+    if direction == 'Long':
+        arrow_start = df['Low'][day] - df['ATR20'][day]
+        arrow_end = df['Low'][day] - df['ATR20'][day]*0.2
+    else:
+        arrow_start = df['High'][day] + df['ATR20'][day]
+        arrow_end = df['High'][day] + df['ATR20'][day]*0.2
+        
+    day_arrow = go.layout.Annotation(dict(
+                    x=df.index[day],
+                    y=arrow_end,
+                    xref="x", yref="y",
+                    text="",
+                    showarrow=True,
+                    axref="x", ayref='y',
+                    ax=df.index[day],
+                    ay=arrow_start,
+                    arrowhead=2,
+                    arrowwidth=1,
+                    arrowcolor='rgb(0,0,0)',)
+                )
+    fig.update_layout(annotations=[day_arrow])
+
+    fig.update_layout(title = ticker, height=800)
+    #fig.update_layout(autosize=False, width=500, height=400) # for small
+    fig.update_yaxes(fixedrange=False)
+    fig.show()
+    return fig
+
+
+# In[ ]:
+
+
+# df = get_stock_price('AAPL')
+# df
+
+
+# In[ ]:
+
+
+# fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
+#                       #go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
+#                       #go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1))
+#                      ])
+# fig.update_layout(title = ticker, height=800)
+# fig.update_yaxes(fixedrange=False)
+# fig.show()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+for strategy, ticker_dict_list in all_dict.items():
+    print(strategy)
+    for ticker_dict in ticker_dict_list:
+        ticker = ticker_dict['Ticker']
+        direction = ticker_dict['Direction']
+        #if ticker in stock_list_snp:
+        print(strategy, ticker)
+        entry = ticker_dict['Prices Entry'][prices_entry]
+        df = get_stock_price(ticker, freq = freq)
+        if (ticker_dict.get('FS Bar', None)):
+            plot_all(ticker_dict['Levels'],df,day,ticker,direction, entry,fs_bar = ticker_dict['FS Bar'])
+        else:
+            plot_all(ticker_dict['Levels'],df,day,ticker,direction, entry)
+
+
+# In[ ]:
+
+
+# TODO
+# support should not be just next support lower then remove, ANY price that comes later that is lower should remove, 
+# i.e. df.loc[date_of_support:]['Low'] < support
+
+# EXCEPT IF BREACH IS RECENT, BECAUSE WE STILL WANT TO SEE THIS FORCE BOTTOM
+# DO FOR FIND_LEVELS() AND FIND_RECENT_LEVELS()
+
+# stock list does not even have apple inside, check
+# bull fs may have to change
+# bull fs SMA for price flow uptrend? price above 50 sma at least, and 20 sma above 50 sma
+
+
+# In[ ]:
+
+
+df
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
 
 
 
