@@ -907,177 +907,177 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
 len(stock_list_all)
 
 
-# # TODO: make script for crypt as additional page
-# # make script for short term only on S&P DR1X # done
-# # make function for test 20/50MA from above
-# # make function for test 20/50MA from below
-# 
-# # bearish/bullish FS reversal: Done
-# # UR1/DR1: Done
-# # UR2/DR2 (don't need to program more?) # check for MA and return those
-# 
-# # bearish/bullish FS test MA
-# # both below similar
-# # UC1/DC1 # still need to test for flush up
-# # UC2/DC2
-# 
-# # script to scan everything for futures with position sizing
-# # script to scan everything for forex 4h timeframe with position sizing
-# 
-# # one dict for one type, list to store all dicts?
-# 
-# all_dict = {'UR1':[],'DR1':[],
-#             'bull_fs':[],'bear_fs':[], 'bull_fs_sma':[], 'bear_fs_sma':[],
-#             'UC1': [], 'DC1': []
-#            }
-# 
-# # can consider to append df if match also, so no need to scrape again
-# # loop through each symbol
-# for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
-#   #ticker = ticker.replace(".", "-")
-#   try:
-#     df = get_stock_price(ticker, freq = freq)
-# 
-#     bearish_ur_result, swing_bar_ur = bearish_ur1(df,day,rise_days=rise_drop_days)
-#     bullish_dr_result, swing_bar_dr = bullish_dr1(df,day,drop_days=rise_drop_days)
-#     bearish_fs_result, which_bar_bear_fs = bearish_fs(df,day)
-#     bullish_fs_result, which_bar_bull_fs = bullish_fs(df,day)
-#     #print(ticker)
-#     bullish_uc1_result, most_recent_low, most_recent_high = bullish_uc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
-#     
-#     
-#     if bullish_uc1_result:
-#         print("######## Bullish UC1 Signal:", i, ticker)
-#         ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Long'}
-#         ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
-#         all_dict['UC1'].append(ticker_df)
-#     
-#     bearish_dc1_result, most_recent_low, most_recent_high = bearish_dc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
-#         
-#     if bearish_dc1_result:
-#         print("######## Bearish DC1 Signal:", i, ticker)
-#         ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Short'}
-#         ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
-#         all_dict['DC1'].append(ticker_df)
-# 
-#     if bearish_ur_result:
-# 
-#         #ur.append(ticker)
-#         print("Bearish UR1 Signal:", i, ticker)
-#         print("Swing Bar:", swing_bar_ur)
-# 
-#         levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
-# 
-#         ticker_df = {'Ticker': ticker,
-#                    'Levels': levels_high, 'Swing Bar': swing_bar_ur, 'Direction': 'Short'}
-# 
-#         # force_top, level = test_force_top(df.iloc[i-swing_bar:], levels_high)
-#         force_top, level = test_force_top(df, day, levels_high)
-# 
-#         if force_top:
-#             print("######## Force top:", level)
-#             ticker_df['Force Top'] = level
-#             ticker_df['Steepness'] = check_50_steepness_top(df, swing_bar_ur, level, rise_days = rise_drop_days)
-#             ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
-#             all_dict['UR1'].append(ticker_df)
-#         elif force_top == False:
-#             print("No force top")
-#             ticker_df['Force Top'] = False
-# 
-#             #bearish_ur_dict[ticker] = dict_df
-# 
-#     if bullish_dr_result:
-#         #dict_df = {}
-#         #dr.append(ticker)
-#         print("Bullish DR1 Signal:", i, ticker)
-#         #print("Swing Bar:", swing_bar_dr)
-#         levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
-# 
-#         ticker_df = {'Ticker': ticker,
-#                    'Levels': levels_low, 'Swing Bar': swing_bar_dr, 'Direction': 'Long'}
-# 
-#         force_bottom, level = test_force_bottom(df, day, levels_low)
-# 
-# 
-#         if force_bottom: # true if have, None if don't have
-#             print("######## Force bottom:", level)
-#             ticker_df['Force Bottom'] = level # level is tuple with datetime index and level itself
-#             ticker_df['Steepness'] = check_50_steepness_bottom(df, swing_bar_dr, level, drop_days = rise_drop_days)
-#             ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
-#             all_dict['DR1'].append(ticker_df)
-#         elif force_bottom == False:
-#             print("No force bottom")
-#             ticker_df['Force Bottom'] = False
-# 
-#     if bearish_fs_result:
-# 
-#         #ur.append(ticker)
-#         print("Bearish FS Signal:", i, ticker)
-#         #print("Swing Bar:", swing_bar_ur)
-# 
-#         levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
-#         below_sma = test_sma_below(df, day, day-5)
-#         # downtrend = is_downtrend()
-#         #dr.append(ticker)
-#         #print("Bullish FS Signal:", i, ticker)
-#         #print("Swing Bar:", swing_bar_dr)
-#         #levels_low, levels_high = find_levels(df)
-# 
-#         ticker_df = {'Ticker': ticker,
-#                    'Levels': levels_high,
-#                      'FS Bar': which_bar_bear_fs, 'Direction': 'Short'}
-# 
-#         force_top, level = test_force_top(df, day, levels_high)
-# 
-#         if force_top:
-#             print("######## Force Top:", level)
-#             ticker_df['Force Top'] = level
-#             ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
-#             all_dict['bear_fs'].append(ticker_df)
-#         elif force_bottom == False:
-#             print("No force top")
-#             ticker_df['Force Top'] = False
-# 
-#         if below_sma:
-#             print("######## Below SMA Detected")
-#             ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
-#             all_dict['bear_fs_sma'].append(ticker_df)
-#         elif below_sma == False:
-#             print("No below SMA")
-# 
-#     if bullish_fs_result:
-#         #dict_df = {}
-#         #dr.append(ticker)
-#         print("Bullish FS Signal:", i, ticker)
-#         #print("Swing Bar:", swing_bar_dr)
-#         levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
-# 
-#         ticker_df = {'Ticker': ticker,
-#                    'Levels': levels_low,
-#                 'FS Bar': which_bar_bull_fs, 'Direction': 'Long'}
-# 
-#         force_bottom, level = test_force_bottom(df, day, levels_low)
-#         above_sma = test_sma_above(df, day, day-5)
-# 
-#         if force_bottom:
-#             print("######## Force bottom:", level)
-#             ticker_df['Force Bottom'] = level
-#             ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
-#             all_dict['bull_fs'].append(ticker_df)
-#         elif force_bottom == False:
-#             print("No force bottom")
-#             ticker_df['Force Bottom'] = False
-# 
-#         if above_sma:
-#             print("######## Above SMA Detected")
-#             ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
-#             all_dict['bull_fs_sma'].append(ticker_df)
-#         elif above_sma == False:
-#             print("No above SMA")
-# 
-# 
-#   except Exception as e:
-#     print(f'({i}) Error for {ticker}: {e}')
+# TODO: make script for crypt as additional page
+# make script for short term only on S&P DR1X # done
+# make function for test 20/50MA from above
+# make function for test 20/50MA from below
+
+# bearish/bullish FS reversal: Done
+# UR1/DR1: Done
+# UR2/DR2 (don't need to program more?) # check for MA and return those
+
+# bearish/bullish FS test MA
+# both below similar
+# UC1/DC1 # still need to test for flush up
+# UC2/DC2
+
+# script to scan everything for futures with position sizing
+# script to scan everything for forex 4h timeframe with position sizing
+
+# one dict for one type, list to store all dicts?
+
+all_dict = {'UR1':[],'DR1':[],
+            'bull_fs':[],'bear_fs':[], 'bull_fs_sma':[], 'bear_fs_sma':[],
+            'UC1': [], 'DC1': []
+           }
+
+# can consider to append df if match also, so no need to scrape again
+# loop through each symbol
+for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
+  #ticker = ticker.replace(".", "-")
+  try:
+    df = get_stock_price(ticker, freq = freq)
+
+    bearish_ur_result, swing_bar_ur = bearish_ur1(df,day,rise_days=rise_drop_days)
+    bullish_dr_result, swing_bar_dr = bullish_dr1(df,day,drop_days=rise_drop_days)
+    bearish_fs_result, which_bar_bear_fs = bearish_fs(df,day)
+    bullish_fs_result, which_bar_bull_fs = bullish_fs(df,day)
+    #print(ticker)
+    bullish_uc1_result, most_recent_low, most_recent_high = bullish_uc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
+    
+    
+    if bullish_uc1_result:
+        print("######## Bullish UC1 Signal:", i, ticker)
+        ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Long'}
+        ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
+        all_dict['UC1'].append(ticker_df)
+    
+    bearish_dc1_result, most_recent_low, most_recent_high = bearish_dc1(df, day, sma_start = sma_start, sma_end = sma_end, recent_swing_start = recent_swing_start, recent_swing_end = recent_swing_end)
+        
+    if bearish_dc1_result:
+        print("######## Bearish DC1 Signal:", i, ticker)
+        ticker_df = {'Ticker': ticker, 'Levels': [most_recent_low, most_recent_high], 'Direction': 'Short'}
+        ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
+        all_dict['DC1'].append(ticker_df)
+
+    if bearish_ur_result:
+
+        #ur.append(ticker)
+        print("Bearish UR1 Signal:", i, ticker)
+        print("Swing Bar:", swing_bar_ur)
+
+        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+
+        ticker_df = {'Ticker': ticker,
+                   'Levels': levels_high, 'Swing Bar': swing_bar_ur, 'Direction': 'Short'}
+
+        # force_top, level = test_force_top(df.iloc[i-swing_bar:], levels_high)
+        force_top, level = test_force_top(df, day, levels_high)
+
+        if force_top:
+            print("######## Force top:", level)
+            ticker_df['Force Top'] = level
+            ticker_df['Steepness'] = check_50_steepness_top(df, swing_bar_ur, level, rise_days = rise_drop_days)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
+            all_dict['UR1'].append(ticker_df)
+        elif force_top == False:
+            print("No force top")
+            ticker_df['Force Top'] = False
+
+            #bearish_ur_dict[ticker] = dict_df
+
+    if bullish_dr_result:
+        #dict_df = {}
+        #dr.append(ticker)
+        print("Bullish DR1 Signal:", i, ticker)
+        #print("Swing Bar:", swing_bar_dr)
+        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+
+        ticker_df = {'Ticker': ticker,
+                   'Levels': levels_low, 'Swing Bar': swing_bar_dr, 'Direction': 'Long'}
+
+        force_bottom, level = test_force_bottom(df, day, levels_low)
+
+
+        if force_bottom: # true if have, None if don't have
+            print("######## Force bottom:", level)
+            ticker_df['Force Bottom'] = level # level is tuple with datetime index and level itself
+            ticker_df['Steepness'] = check_50_steepness_bottom(df, swing_bar_dr, level, drop_days = rise_drop_days)
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = risk, currency = 'USD', ratio = risk_reward_ratio)
+            all_dict['DR1'].append(ticker_df)
+        elif force_bottom == False:
+            print("No force bottom")
+            ticker_df['Force Bottom'] = False
+
+    if bearish_fs_result:
+
+        #ur.append(ticker)
+        print("Bearish FS Signal:", i, ticker)
+        #print("Swing Bar:", swing_bar_ur)
+
+        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+        below_sma = test_sma_below(df, day, day-5)
+        # downtrend = is_downtrend()
+        #dr.append(ticker)
+        #print("Bullish FS Signal:", i, ticker)
+        #print("Swing Bar:", swing_bar_dr)
+        #levels_low, levels_high = find_levels(df)
+
+        ticker_df = {'Ticker': ticker,
+                   'Levels': levels_high,
+                     'FS Bar': which_bar_bear_fs, 'Direction': 'Short'}
+
+        force_top, level = test_force_top(df, day, levels_high)
+
+        if force_top:
+            print("######## Force Top:", level)
+            ticker_df['Force Top'] = level
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
+            all_dict['bear_fs'].append(ticker_df)
+        elif force_bottom == False:
+            print("No force top")
+            ticker_df['Force Top'] = False
+
+        if below_sma:
+            print("######## Below SMA Detected")
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
+            all_dict['bear_fs_sma'].append(ticker_df)
+        elif below_sma == False:
+            print("No below SMA")
+
+    if bullish_fs_result:
+        #dict_df = {}
+        #dr.append(ticker)
+        print("Bullish FS Signal:", i, ticker)
+        #print("Swing Bar:", swing_bar_dr)
+        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+
+        ticker_df = {'Ticker': ticker,
+                   'Levels': levels_low,
+                'FS Bar': which_bar_bull_fs, 'Direction': 'Long'}
+
+        force_bottom, level = test_force_bottom(df, day, levels_low)
+        above_sma = test_sma_above(df, day, day-5)
+
+        if force_bottom:
+            print("######## Force bottom:", level)
+            ticker_df['Force Bottom'] = level
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
+            all_dict['bull_fs'].append(ticker_df)
+        elif force_bottom == False:
+            print("No force bottom")
+            ticker_df['Force Bottom'] = False
+
+        if above_sma:
+            print("######## Above SMA Detected")
+            ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
+            all_dict['bull_fs_sma'].append(ticker_df)
+        elif above_sma == False:
+            print("No above SMA")
+
+
+  except Exception as e:
+    print(f'({i}) Error for {ticker}: {e}')
 
 # In[19]:
 
