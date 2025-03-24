@@ -1146,7 +1146,7 @@ with open('interested_tickers.html', 'a') as f:
               #if ticker in stock_list_snp:
               print(strategy, ticker)
               df = get_stock_price(ticker, freq = freq)
-              ticker_dict['Volume'] = df['Volume'][-1]
+              ticker_dict['Volume'] = df['Ave Volume 20'][day]
               if (ticker_dict.get('FS Bar', None)):
                   fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
               else:
@@ -1187,7 +1187,7 @@ with open('interested_tickers_hk.html', 'a') as f:
               #if ticker in stock_list_snp:
               print(strategy, ticker)
               df = get_stock_price(ticker, freq = freq)
-              ticker_dict['Volume'] = df['Volume'][-1]
+              ticker_dict['Volume'] = df['Ave Volume 20'][day]
               if (ticker_dict.get('FS Bar', None)):
                   fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
               else:
@@ -1228,7 +1228,7 @@ with open('interested_tickers_snp.html', 'a') as f:
           if ticker in stock_list_snp:
               print(strategy, ticker)
               df = get_stock_price(ticker, freq = freq)
-              ticker_dict['Volume'] = df['Volume'][-1]
+              ticker_dict['Volume'] = df['Ave Volume 20'][day]
               if (ticker_dict.get('FS Bar', None)):
                   fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
               else:
