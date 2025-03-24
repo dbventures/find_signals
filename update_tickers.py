@@ -62,7 +62,7 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # In[2]:
 
 
-day = -50 # minus 1 means most recent date
+day = -15 # minus 1 means most recent date
 freq = '2day'
 rise_drop_days = 5
 sma_start = day+1-1 # for uc dc
@@ -389,7 +389,7 @@ def is_support_harderv2(df,i):
     cond_3bar_1 = (df['Low'][i-1] - df['Low'][i]) > 0.8*df['ATR20'][i]
     cond_3bar_2 = (df['Low'][i+1] - df['Low'][i]) > 0.8*df['ATR20'][i]
 
-    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
+    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 and cond_3bar_2))
 
 # determine bearish fractal
 def is_resistance_harderv2(df,i):
@@ -401,7 +401,7 @@ def is_resistance_harderv2(df,i):
     cond_3bar_1 = (df['High'][i] - df['High'][i-1]) > 0.8*df['ATR20'][i]
     cond_3bar_2 = (df['High'][i] - df['High'][i+1]) > 0.8*df['ATR20'][i]
 
-    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
+    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 and cond_3bar_2))
 
 
 
@@ -907,6 +907,9 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
 len(stock_list_all)
 
 
+# In[ ]:
+
+
 # TODO: make script for crypt as additional page
 # make script for short term only on S&P DR1X # done
 # make function for test 20/50MA from above
@@ -1079,7 +1082,8 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
   except Exception as e:
     print(f'({i}) Error for {ticker}: {e}')
 
-# In[19]:
+
+# In[ ]:
 
 
 # exporting
@@ -1136,14 +1140,14 @@ def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar = Non
 
 
 
-# In[20]:
+# In[ ]:
 
 
 # df = get_stock_price("BJ") # see why it is needed to ignore most recent swing
 # levels_low, levels_high = find_levels(df)
 
 
-# In[21]:
+# In[ ]:
 
 
 # # test steepness calculation (this is correct)
@@ -1156,7 +1160,7 @@ def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar = Non
 # check_50_steepness_top(df, swing_bar_dr, level, rise_days = rise_drop_days)
 
 
-# In[22]:
+# In[ ]:
 
 
 # tickers_test = []
@@ -1167,7 +1171,7 @@ def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar = Non
 # tickers_test
 
 
-# In[23]:
+# In[ ]:
 
 
 flip_dict = {}
@@ -1379,37 +1383,6 @@ with open('interested_tickers_snp.html', 'a') as f:
 #      'stop_loss': 46.549999694824216,
 #      'n_shares': 62.54344355065693,
 #      'more_than_atr': True},
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-# df = get_stock_price('AAPL')
-# df
-
-
-# In[ ]:
-
-
-# fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
-#                       #go.Scatter(x=df.index, y=df.SMA50, line=dict(color='yellow', width=1)),
-#                       #go.Scatter(x=df.index, y=df.SMA20, line=dict(color='blue', width=1))
-#                      ])
-# fig.update_layout(title = ticker, height=800)
-# fig.update_yaxes(fixedrange=False)
-# fig.show()
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:
