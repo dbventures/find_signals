@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 # Commented out IPython magic to ensure Python compatibility.
@@ -59,17 +59,22 @@ string_4y_ago = (today - relativedelta(years=4)).strftime('%Y-%m-%d')
 string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 
 
-# In[2]:
+# In[ ]:
 
 
 day = -15 # minus 1 means most recent date
 freq = '2day'
+
+# for ur dr
 rise_drop_days = 5
+atr_multiple_urdr = 5
+
 sma_start = day+1-1 # for uc dc
 sma_end = day+1-4 # for uc dc
 atr_criteria = 2 # diff between most recent high and low, for uc dc
 recent_swing_start = day+1-5
 recent_swing_end = day+1-30
+
 risk = 300
 #max_breach = day+1-6 # allow recent 6 days to breach level (for force bottom scenario)
 max_breach = -6 # no need day + 1 as we are only passing until that days data to the find_levels() functions below
@@ -78,7 +83,7 @@ prices_entry = '0.25'
 risk_reward_ratio = 2
 
 
-# In[3]:
+# In[ ]:
 
 
 # end_date = '2022-4-17'
@@ -111,7 +116,7 @@ risk_reward_ratio = 2
 #   return df
 
 
-# In[4]:
+# In[ ]:
 
 
 # get stock prices using yahooquery library
@@ -129,7 +134,7 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 
 
 
-# In[5]:
+# In[ ]:
 
 
 # get stock prices using yfinance library
@@ -173,7 +178,7 @@ def get_stock_price(symbol, freq = '2day'):
   return df
 
 
-# In[6]:
+# In[ ]:
 
 
 # get the full stock list of S&P 500
@@ -182,7 +187,7 @@ stock_list_snp = payload[0]['Symbol'].values.tolist()
 len(stock_list_snp)
 
 
-# In[7]:
+# In[ ]:
 
 
 futures_list = ['YM=F','ES=F','NQ=F','TF=F', # index
@@ -204,7 +209,7 @@ forex_list = [
 ]
 
 
-# In[8]:
+# In[ ]:
 
 
 # os.environ['FMP_API_KEY'] = 'b187d0baf2c855400870f859dac36b99'
@@ -215,19 +220,19 @@ forex_list = [
 # df_all_stocks
 
 
-# In[9]:
+# In[ ]:
 
 
 # df_all_stocks[df_all_stocks['symbol']=='AAPL']
 
 
-# In[10]:
+# In[ ]:
 
 
 # list(df_all_stocks['exchange'].unique())
 
 
-# In[11]:
+# In[ ]:
 
 
 # df_all_stocks = pd.read_csv("all_stocks_info.csv")
@@ -242,7 +247,7 @@ forex_list = [
 # print(len(stock_list))
 
 
-# In[12]:
+# In[ ]:
 
 
 # with open("stock_list.txt", 'w') as f:
@@ -250,7 +255,7 @@ forex_list = [
 #         f.write(str(ticker) + '\n')
 
 
-# In[13]:
+# In[ ]:
 
 
 # crypto_list = []
@@ -277,13 +282,13 @@ stock_list_all = set(stock_list_snp).union(set(stock_list))
 
 
 
-# In[14]:
+# In[ ]:
 
 
 # stock_list_all = list(stock_list_all)[:200]
 
 
-# In[15]:
+# In[ ]:
 
 
 # # # for debugging only
@@ -327,7 +332,7 @@ stock_list_all = set(stock_list_snp).union(set(stock_list))
 #  'CSTE']
 
 
-# In[16]:
+# In[ ]:
 
 
 # method 1: fractal candlestick pattern
@@ -386,10 +391,13 @@ def is_support_harderv2(df,i):
     cond3 = df['Low'][i+1] < df['Low'][i+2]
     cond4 = df['Low'][i-1] < df['Low'][i-2]
 
-    cond_3bar_1 = (df['Low'][i-1] - df['Low'][i]) > 0.8*df['ATR20'][i]
-    cond_3bar_2 = (df['Low'][i+1] - df['Low'][i]) > 0.8*df['ATR20'][i]
+    cond_3bar_1 = (df['Low'][i-1] - df['Low'][i]) > 0.5*df['ATR20'][i]
+    cond_3bar_2 = (df['Low'][i+1] - df['Low'][i]) > 0.5*df['ATR20'][i]
+    
+    cond_3bar_3 = (df['Low'][i-1] - df['Low'][i]) > 0.8*df['ATR20'][i]
+    cond_3bar_4 = (df['Low'][i+1] - df['Low'][i]) > 0.8*df['ATR20'][i]
 
-    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 and cond_3bar_2))
+    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 and cond_3bar_2) and (cond_3bar_3 or cond_3bar_4))
 
 # determine bearish fractal
 def is_resistance_harderv2(df,i):
@@ -398,10 +406,13 @@ def is_resistance_harderv2(df,i):
     cond3 = df['High'][i+1] > df['High'][i+2]
     cond4 = df['High'][i-1] > df['High'][i-2]
 
-    cond_3bar_1 = (df['High'][i] - df['High'][i-1]) > 0.8*df['ATR20'][i]
-    cond_3bar_2 = (df['High'][i] - df['High'][i+1]) > 0.8*df['ATR20'][i]
+    cond_3bar_1 = (df['High'][i] - df['High'][i-1]) > 0.5*df['ATR20'][i]
+    cond_3bar_2 = (df['High'][i] - df['High'][i+1]) > 0.5*df['ATR20'][i]
+    
+    cond_3bar_3 = (df['High'][i] - df['High'][i-1]) > 0.8*df['ATR20'][i]
+    cond_3bar_4 = (df['High'][i] - df['High'][i+1]) > 0.8*df['ATR20'][i]
 
-    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 and cond_3bar_2))
+    return (cond1 and cond2 and cond3 and cond4)  or (cond1 and cond2 and (cond_3bar_1 and cond_3bar_2) and (cond_3bar_3 or cond_3bar_4))
 
 
 
@@ -486,7 +497,7 @@ def find_recent_levels(df, i, j):
     return recent_lows, recent_highs
 
 
-# In[17]:
+# In[ ]:
 
 
 def exe_bull(df, i):
@@ -523,22 +534,22 @@ def bullish_dr1(df,i, drop_days=3): # i should be -1 for most recent setup, for 
   #drop_days = 3 # smaller means steeper
   j = drop_days - 3 #45678 is already 3 days difference so adjust it
   if i == -1:
-    swing_1 = (df['Low'][i] < df['Low'][i-3:i].min()) and ((df['High'][i-3-j:].max() - df['Low'][i-3-j:].min()) >= 4*df['ATR20'][i]) # this is also bar that comes back up as exe
+    swing_1 = (df['Low'][i] < df['Low'][i-3:i].min()) and ((df['High'][i-3-j:].max() - df['Low'][i-3-j:].min()) >= atr_multiple_urdr*df['ATR20'][i]) # this is also bar that comes back up as exe
     # 1 day ago bar is lowest, lower than today bar low, also lower than past 4 bars (5 days ago to 2 days ago), and 1 day ago compared to 6 day ago range is higher than 4 ATR20
     # maybe don't just use 3 days ago for second part, use 6 days instead, or like 5 days at least, i.e. 678910 instead of 45678
     # second part should be same as third part basically, 45678 means 3 days before
-    swing_2 = (df['Low'][i-1] < df['Low'][i])          and (df['Low'][i-1] < df['Low'][i-4:i-1].min()) and ((df['High'][i-4-j:i].max() - df['Low'][i-4-j:i].min()) >= 4*df['ATR20'][i])
-    swing_3 = (df['Low'][i-2] < df['Low'][i-1:].min()) and (df['Low'][i-2] < df['Low'][i-5:i-2].min()) and ((df['High'][i-5-j:i-1].max() - df['Low'][i-5-j:i-1].min()) >= 4*df['ATR20'][i])
-    swing_4 = (df['Low'][i-3] < df['Low'][i-2:].min()) and (df['Low'][i-3] < df['Low'][i-6:i-3].min()) and ((df['High'][i-6-j:i-2].max() - df['Low'][i-6-j:i-2].min()) >= 4*df['ATR20'][i])
-    # swing_5 = (df['Low'][i-4] < df['Low'][i-3:].min()) and (df['Low'][i-4] < df['Low'][i-7:i-4].min()) and ((df['High'][i-7-j:i-3].max() - df['Low'][i-7-j:i-3].min()) >= 4*df['ATR20'][i])
-    # swing_6 = (df['Low'][i-5] < df['Low'][i-4:].min()) and (df['Low'][i-5] < df['Low'][i-8:i-5].min()) and ((df['High'][i-8-j:i-4].max() - df['Low'][i-8-j:i-4].min()) >= 4*df['ATR20'][i])
+    swing_2 = (df['Low'][i-1] < df['Low'][i])          and (df['Low'][i-1] < df['Low'][i-4:i-1].min()) and ((df['High'][i-4-j:i].max() - df['Low'][i-4-j:i].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_3 = (df['Low'][i-2] < df['Low'][i-1:].min()) and (df['Low'][i-2] < df['Low'][i-5:i-2].min()) and ((df['High'][i-5-j:i-1].max() - df['Low'][i-5-j:i-1].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_4 = (df['Low'][i-3] < df['Low'][i-2:].min()) and (df['Low'][i-3] < df['Low'][i-6:i-3].min()) and ((df['High'][i-6-j:i-2].max() - df['Low'][i-6-j:i-2].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    # swing_5 = (df['Low'][i-4] < df['Low'][i-3:].min()) and (df['Low'][i-4] < df['Low'][i-7:i-4].min()) and ((df['High'][i-7-j:i-3].max() - df['Low'][i-7-j:i-3].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    # swing_6 = (df['Low'][i-5] < df['Low'][i-4:].min()) and (df['Low'][i-5] < df['Low'][i-8:i-5].min()) and ((df['High'][i-8-j:i-4].max() - df['Low'][i-8-j:i-4].min()) >= atr_multiple_urdr*df['ATR20'][i])
   else:
     swing_1 = (df['Low'][i] < df['Low'][i-3:i-1+1].min()) and ((df['High'][i-5:i+1].max() - df['Low'][i-5:i+1].min()) >= 4*df['ATR20'][i])
-    swing_2 = (df['Low'][i-1] < df['Low'][i])             and (df['Low'][i-1] < df['Low'][i-4:i-1].min()) and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= 4*df['ATR20'][i])
-    swing_3 = (df['Low'][i-2] < df['Low'][i-1:i+1].min()) and (df['Low'][i-2] < df['Low'][i-5:i-2].min()) and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= 4*df['ATR20'][i])
-    swing_4 = (df['Low'][i-3] < df['Low'][i-2:i+1].min()) and (df['Low'][i-3] < df['Low'][i-6:i-3].min()) and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) >= 4*df['ATR20'][i])
-    # swing_5 = (df['Low'][i-4] < df['Low'][i-3:i+1].min()) and (df['Low'][i-4] < df['Low'][i-7:i-4].min()) and ((df['High'][i-7-j:i-4].max() - df['Low'][i-7-j:i-4].min()) >= 4*df['ATR20'][i])
-    # swing_6 = (df['Low'][i-5] < df['Low'][i-4:i+1].min()) and (df['Low'][i-5] < df['Low'][i-8:i-5].min()) and ((df['High'][i-8-j:i-5].max() - df['Low'][i-8-j:i-5].min()) >= 4*df['ATR20'][i])
+    swing_2 = (df['Low'][i-1] < df['Low'][i])             and (df['Low'][i-1] < df['Low'][i-4:i-1].min()) and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_3 = (df['Low'][i-2] < df['Low'][i-1:i+1].min()) and (df['Low'][i-2] < df['Low'][i-5:i-2].min()) and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_4 = (df['Low'][i-3] < df['Low'][i-2:i+1].min()) and (df['Low'][i-3] < df['Low'][i-6:i-3].min()) and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    # swing_5 = (df['Low'][i-4] < df['Low'][i-3:i+1].min()) and (df['Low'][i-4] < df['Low'][i-7:i-4].min()) and ((df['High'][i-7-j:i-4].max() - df['Low'][i-7-j:i-4].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    # swing_6 = (df['Low'][i-5] < df['Low'][i-4:i+1].min()) and (df['Low'][i-5] < df['Low'][i-8:i-5].min()) and ((df['High'][i-8-j:i-5].max() - df['Low'][i-8-j:i-5].min()) >= atr_multiple_urdr*df['ATR20'][i])
 
   which_swing = None
   if swing_1:
@@ -577,18 +588,18 @@ def bearish_ur1(df,i,rise_days=3): # i should be -1 for most recent setup, for b
   if i == -1:
     swing_1 = (df['High'][i] > df['High'][i-3:i].max()) and ((df['High'][i-3-j:].max() - df['Low'][i-3-j:].min()) >= 4*df['ATR20'][i])
     # see bullish_dr same part of function for notes
-    swing_2 = (df['High'][i-1] > df['High'][i])          and (df['High'][i-1] > df['High'][i-4:i-1].max()) and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= 4*df['ATR20'][i])
-    swing_3 = (df['High'][i-2] > df['High'][i-1:].max()) and (df['High'][i-2] > df['High'][i-5:i-2].max()) and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= 4*df['ATR20'][i])
-    swing_4 = (df['High'][i-3] > df['High'][i-2:].max()) and (df['High'][i-3] > df['High'][i-6:i-3].max()) and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) > 4*df['ATR20'][i])
-    #swing_5 = (df['High'][i-4] > df['High'][i-3:].max()) and (df['High'][i-4] > df['High'][i-7:i-4].max()) and ((df['High'][i-7-j:i-4].max() - df['Low'][i-7-j:i-4].min()) >= 4*df['ATR20'][i])
-    #swing_6 = (df['High'][i-5] > df['High'][i-4:].max()) and (df['High'][i-5] > df['High'][i-8:i-5].max()) and ((df['High'][i-8-j:i-5].max() - df['Low'][i-8-j:i-5].min()) >= 4*df['ATR20'][i])
+    swing_2 = (df['High'][i-1] > df['High'][i])          and (df['High'][i-1] > df['High'][i-4:i-1].max()) and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_3 = (df['High'][i-2] > df['High'][i-1:].max()) and (df['High'][i-2] > df['High'][i-5:i-2].max()) and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_4 = (df['High'][i-3] > df['High'][i-2:].max()) and (df['High'][i-3] > df['High'][i-6:i-3].max()) and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) > atr_multiple_urdr*df['ATR20'][i])
+    #swing_5 = (df['High'][i-4] > df['High'][i-3:].max()) and (df['High'][i-4] > df['High'][i-7:i-4].max()) and ((df['High'][i-7-j:i-4].max() - df['Low'][i-7-j:i-4].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    #swing_6 = (df['High'][i-5] > df['High'][i-4:].max()) and (df['High'][i-5] > df['High'][i-8:i-5].max()) and ((df['High'][i-8-j:i-5].max() - df['Low'][i-8-j:i-5].min()) >= atr_multiple_urdr*df['ATR20'][i])
   else:
     swing_1 = (df['High'][i] > df['High'][i-4:i-1+1].max()) and ((df['High'][i-6:i+1].max() - df['Low'][i-6:i+1].min()) >= 4*df['ATR20'][i])
-    swing_2 = (df['High'][i-1] > df['High'][i])             and (df['High'][i-1] > df['High'][i-4:i-1].max()) and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= 4*df['ATR20'][i])
-    swing_3 = (df['High'][i-2] > df['High'][i-1:i+1].max()) and (df['High'][i-2] > df['High'][i-5:i-2].max()) and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= 4*df['ATR20'][i])
-    swing_4 = (df['High'][i-3] > df['High'][i-2:i+1].max()) and (df['High'][i-3] > df['High'][i-6:i-3].max()) and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) > 4*df['ATR20'][i])
-    #swing_5 = (df['High'][i-4] > df['High'][i-3:i+1].max()) and (df['High'][i-4] > df['High'][i-7:i-4].max()) and ((df['High'][i-7-j:i-4].max() - df['Low'][i-7-j:i-4].min()) >= 4*df['ATR20'][i])
-    #swing_6 = (df['High'][i-5] > df['High'][i-4:i+1].max()) and (df['High'][i-5] > df['High'][i-8:i-5].max()) and ((df['High'][i-8-j:i-5].max() - df['Low'][i-8-j:i-5].min()) >= 4*df['ATR20'][i])
+    swing_2 = (df['High'][i-1] > df['High'][i])             and (df['High'][i-1] > df['High'][i-4:i-1].max()) and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_3 = (df['High'][i-2] > df['High'][i-1:i+1].max()) and (df['High'][i-2] > df['High'][i-5:i-2].max()) and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    swing_4 = (df['High'][i-3] > df['High'][i-2:i+1].max()) and (df['High'][i-3] > df['High'][i-6:i-3].max()) and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) > atr_multiple_urdr*df['ATR20'][i])
+    #swing_5 = (df['High'][i-4] > df['High'][i-3:i+1].max()) and (df['High'][i-4] > df['High'][i-7:i-4].max()) and ((df['High'][i-7-j:i-4].max() - df['Low'][i-7-j:i-4].min()) >= atr_multiple_urdr*df['ATR20'][i])
+    #swing_6 = (df['High'][i-5] > df['High'][i-4:i+1].max()) and (df['High'][i-5] > df['High'][i-8:i-5].max()) and ((df['High'][i-8-j:i-5].max() - df['Low'][i-8-j:i-5].min()) >= atr_multiple_urdr*df['ATR20'][i])
 
   which_swing = None
   if swing_1:
@@ -901,7 +912,7 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
 
 
 
-# In[18]:
+# In[ ]:
 
 
 len(stock_list_all)
@@ -1385,32 +1396,6 @@ with open('interested_tickers_snp.html', 'a') as f:
 #      'more_than_atr': True},
 
 
-# In[ ]:
-
-
-
-# In[ ]:
-
-
-# TODO
-# support should not be just next support lower then remove, ANY price that comes later that is lower should remove, 
-# i.e. df.loc[date_of_support:]['Low'] < support
-
-# EXCEPT IF BREACH IS RECENT, BECAUSE WE STILL WANT TO SEE THIS FORCE BOTTOM
-# DO FOR FIND_LEVELS() AND FIND_RECENT_LEVELS()
-
-# stock list does not even have apple inside, check
-# bull fs may have to change
-# bull fs SMA for price flow uptrend? price above 50 sma at least, and 20 sma above 50 sma
-
-
-# In[ ]:
-
-
-df
-
-
-# In[ ]:
 
 
 
