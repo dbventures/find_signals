@@ -229,16 +229,16 @@ forex_list = [
 # In[11]:
 
 
-df_all_stocks = pd.read_csv("all_stocks_info.csv")
-#print(df_all_stocks.exchange.value_counts()[:20]) # print top exchanges by stocks
-stock_exchanges = [
-    "NASDAQ", "New York Stock Exchange", 'NYSE', 'AMEX',
-    "HKSE", "NASDAQ Global Select", 
-    'NASDAQ Stock Exchange', 'NASDAQ Capital Markets','NASDAQ Capital Market',
-    'NASDAQ Stock Market', 'Nasdaq']
-df_stocks_filtered = df_all_stocks[(df_all_stocks["exchange"].isin(stock_exchanges)) & (df_all_stocks["type"]=='stock')] #9k+ stocks here already
-stock_list = list(df_stocks_filtered.symbol.unique())
-print(len(stock_list))
+# df_all_stocks = pd.read_csv("all_stocks_info.csv")
+# #print(df_all_stocks.exchange.value_counts()[:20]) # print top exchanges by stocks
+# stock_exchanges = [
+#     "NASDAQ", "New York Stock Exchange", 'NYSE', 'AMEX',
+#     "HKSE", "NASDAQ Global Select", 
+#     'NASDAQ Stock Exchange', 'NASDAQ Capital Markets','NASDAQ Capital Market',
+#     'NASDAQ Stock Market', 'Nasdaq']
+# df_stocks_filtered = df_all_stocks[(df_all_stocks["exchange"].isin(stock_exchanges)) & (df_all_stocks["type"]=='stock')] #9k+ stocks here already
+# stock_list = list(df_stocks_filtered.symbol.unique())
+# print(len(stock_list))
 
 
 # In[12]:
