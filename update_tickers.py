@@ -1,7 +1,24 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
+
+
+# #!pip install pandas==1.5.0
+# #!pip install numpy==1.22.4
+# !pip install plotly
+# #!pip install matplotlib==3.4.3
+# !pip install seaborn
+# !pip install gunicorn
+# !pip install yfinance
+# !pip install mplfinance
+# !pip install pandas-ta
+# !pip install mplfinance==0.12.10b0
+# !pip install lxml
+# !pip install yahooquery==2.3.1
+
+
+# In[40]:
 
 
 # Commented out IPython magic to ensure Python compatibility.
@@ -59,7 +76,7 @@ string_4y_ago = (today - relativedelta(years=4)).strftime('%Y-%m-%d')
 string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 
 
-# In[ ]:
+# In[41]:
 
 
 day = -1 # minus 1 means most recent date
@@ -69,9 +86,10 @@ freq = '2day'
 rise_drop_days = 5
 atr_multiple_urdr = 5
 
+# for uc dc
 sma_start = day+1-1 # for uc dc
 sma_end = day+1-4 # for uc dc
-atr_criteria = 2 # diff between most recent high and low, for uc dc
+atr_criteria = 1.5 # diff between most recent high and low, for uc dc
 recent_swing_start = day+1-5
 recent_swing_end = day+1-30
 
@@ -83,7 +101,7 @@ prices_entry = '0.25'
 risk_reward_ratio = 2
 
 
-# In[ ]:
+# In[42]:
 
 
 # end_date = '2022-4-17'
@@ -116,7 +134,7 @@ risk_reward_ratio = 2
 #   return df
 
 
-# In[ ]:
+# In[43]:
 
 
 # get stock prices using yahooquery library
@@ -134,7 +152,7 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 
 
 
-# In[ ]:
+# In[44]:
 
 
 # get stock prices using yfinance library
@@ -167,6 +185,7 @@ def get_stock_price(symbol, freq = '2day'):
   df['Date'] = pd.to_datetime(df.index)
   df['Date'] = df['Date'].apply(mpl_dates.date2num)
   df = df.loc[:,['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+  #df['ATR20'] = pd.concat([df.High.sub(df.Low), df.High.sub(df.Close.shift()).abs(), df.Low.sub(df.Close.shift()).abs()], axis=1).max(1).ewm(span=20).mean()
   df['ATR20'] = pta.atr(df['High'], df['Low'], df['Close'], window=20, fillna=False, mamode = 'ema')
   #df['SMA20'] = df.ta.sma(20)
   # df['SMA50'] = df.ta.sma(50)
@@ -178,7 +197,13 @@ def get_stock_price(symbol, freq = '2day'):
   return df
 
 
-# In[ ]:
+# In[45]:
+
+
+get_stock_price('AAPL')
+
+
+# In[7]:
 
 
 # get the full stock list of S&P 500
@@ -187,7 +212,7 @@ stock_list_snp = payload[0]['Symbol'].values.tolist()
 len(stock_list_snp)
 
 
-# In[ ]:
+# In[8]:
 
 
 futures_list = ['YM=F','ES=F','NQ=F','TF=F', # index
@@ -209,7 +234,7 @@ forex_list = [
 ]
 
 
-# In[ ]:
+# In[9]:
 
 
 # os.environ['FMP_API_KEY'] = 'b187d0baf2c855400870f859dac36b99'
@@ -220,19 +245,19 @@ forex_list = [
 # df_all_stocks
 
 
-# In[ ]:
+# In[10]:
 
 
 # df_all_stocks[df_all_stocks['symbol']=='AAPL']
 
 
-# In[ ]:
+# In[11]:
 
 
 # list(df_all_stocks['exchange'].unique())
 
 
-# In[ ]:
+# In[12]:
 
 
 # df_all_stocks = pd.read_csv("all_stocks_info.csv")
@@ -247,7 +272,7 @@ forex_list = [
 # print(len(stock_list))
 
 
-# In[ ]:
+# In[13]:
 
 
 # with open("stock_list.txt", 'w') as f:
@@ -255,7 +280,7 @@ forex_list = [
 #         f.write(str(ticker) + '\n')
 
 
-# In[ ]:
+# In[14]:
 
 
 # crypto_list = []
@@ -282,13 +307,13 @@ stock_list_all = set(stock_list_snp).union(set(stock_list))
 
 
 
-# In[ ]:
+# In[15]:
 
 
 # stock_list_all = list(stock_list_all)[:200]
 
 
-# In[ ]:
+# In[16]:
 
 
 # # # for debugging only
@@ -332,7 +357,7 @@ stock_list_all = set(stock_list_snp).union(set(stock_list))
 #  'CSTE']
 
 
-# In[ ]:
+# In[17]:
 
 
 # method 1: fractal candlestick pattern
@@ -497,7 +522,7 @@ def find_recent_levels(df, i, j):
     return recent_lows, recent_highs
 
 
-# In[ ]:
+# In[18]:
 
 
 def exe_bull(df, i):
@@ -686,7 +711,10 @@ def bullish_fs(df,i): # combine with force bottom or test SMA20/50
 def test_force_top(df, day, levels): # should give it levels_high, 5th bar should be below, 4th bar onwards anything above
   for level in levels:
       not_too_late = df['High'][day+1-5] < level[1] # 5th bar should be still below, haven't break yet, if not, its too late
-      went_above = df['High'][day+1-4:day+1].max() > level[1] # 4 bars at any point went above level
+      if day == -1:
+        went_above = df['High'][day+1-4:].max() > level[1]
+      else:
+        went_above = df['High'][day+1-4:day+1].max() > level[1] # 4 bars at any point went above level
       close_below = df['Close'][day+1-1] <= level[1] # last bar close back below or equal
       #print(f"Testing for levels {level}, 5th bar haven't break {not_too_late}, went above {went_above}, close below {close_below}")
       if not_too_late and went_above and close_below:
@@ -696,7 +724,10 @@ def test_force_top(df, day, levels): # should give it levels_high, 5th bar shoul
 def test_force_bottom(df, day, levels): # should give it levels_low
   for level in levels:
       not_too_late = df['Low'][day+1-5] > level [1]
-      went_below = df['Low'][day+1-4:day+1].min() < level[1]
+      if day == -1:
+        went_below = df['Low'][day+1-4:].min() < level[1]
+      else:
+        went_below = df['Low'][day+1-4:day+1].min() < level[1]
       close_above = df['Close'][day+1-1] >= level[1]
       #print(f"Testing for levels {level}, 5th bar haven't break {not_too_late}, went below {went_below}, close above {close_above}")
       if not_too_late and went_below and close_above:
@@ -737,7 +768,10 @@ def get_enter_prices(df, day, ticker, direction = 'Long', risk = 300, currency =
         if enter_override:
             enter_dict['override'] = enter_override
         for key, enter in enter_dict.items():
-            stop_loss = df['Low'][day+1-5:day+1].min() - stop_loss_buffer # lowest within 5 days, most recent "swing low"
+            if day == -1:
+              stop_loss = df['Low'][day+1-5:].min() - stop_loss_buffer # lowest within 5 days, most recent "swing low"                                            
+            else:        
+              stop_loss = df['Low'][day+1-5:day+1].min() - stop_loss_buffer # lowest within 5 days, most recent "swing low"
             take_profit = (enter - stop_loss) * ratio + enter
             n_shares = risk/(enter - stop_loss)
             if (enter - stop_loss) > df['ATR20'][-1]:
@@ -758,7 +792,10 @@ def get_enter_prices(df, day, ticker, direction = 'Long', risk = 300, currency =
         if enter_override:
             enter_dict['override'] = enter_override
         for key, enter in enter_dict.items():
-            stop_loss = df['High'][day+1-5:day+1].max() + stop_loss_buffer
+            if day == -1:
+              stop_loss = df['High'][day+1-5:].max() + stop_loss_buffer
+            else:        
+              stop_loss = df['High'][day+1-5:day+1].max() + stop_loss_buffer
             take_profit = enter - (stop_loss - enter) * ratio
             n_shares = risk/(stop_loss - enter)
             if (stop_loss - enter) > df['ATR20'][-1]:
@@ -912,13 +949,13 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
 
 
 
-# In[ ]:
+# In[19]:
 
 
 len(stock_list_all)
 
 
-# In[ ]:
+# In[20]:
 
 
 # TODO: make script for crypt as additional page
@@ -979,8 +1016,10 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         #ur.append(ticker)
         print("Bearish UR1 Signal:", i, ticker)
         print("Swing Bar:", swing_bar_ur)
-
-        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+        if day == -1:
+          levels_low, levels_high = find_levels(df.iloc[:], max_breach)
+        else:
+          levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_high, 'Swing Bar': swing_bar_ur, 'Direction': 'Short'}
@@ -1005,7 +1044,10 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         #dr.append(ticker)
         print("Bullish DR1 Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_dr)
-        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+        if day == -1:
+          levels_low, levels_high = find_levels(df.iloc[:], max_breach)
+        else:        
+          levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_low, 'Swing Bar': swing_bar_dr, 'Direction': 'Long'}
@@ -1029,7 +1071,10 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         print("Bearish FS Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_ur)
 
-        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+        if day == -1:
+          levels_low, levels_high = find_levels(df.iloc[:], max_breach)
+        else:        
+          levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
         below_sma = test_sma_below(df, day, day-5)
         # downtrend = is_downtrend()
         #dr.append(ticker)
@@ -1064,7 +1109,10 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
         #dr.append(ticker)
         print("Bullish FS Signal:", i, ticker)
         #print("Swing Bar:", swing_bar_dr)
-        levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
+        if day == -1:
+          levels_low, levels_high = find_levels(df.iloc[:], max_breach)
+        else:        
+          levels_low, levels_high = find_levels(df.iloc[:day+1], max_breach)
 
         ticker_df = {'Ticker': ticker,
                    'Levels': levels_low,
@@ -1094,7 +1142,7 @@ for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
     print(f'({i}) Error for {ticker}: {e}')
 
 
-# In[ ]:
+# In[21]:
 
 
 # exporting
@@ -1151,14 +1199,14 @@ def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar = Non
 
 
 
-# In[ ]:
+# In[22]:
 
 
 # df = get_stock_price("BJ") # see why it is needed to ignore most recent swing
 # levels_low, levels_high = find_levels(df)
 
 
-# In[ ]:
+# In[23]:
 
 
 # # test steepness calculation (this is correct)
@@ -1171,7 +1219,7 @@ def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar = Non
 # check_50_steepness_top(df, swing_bar_dr, level, rise_days = rise_drop_days)
 
 
-# In[ ]:
+# In[24]:
 
 
 # tickers_test = []
@@ -1182,7 +1230,7 @@ def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar = Non
 # tickers_test
 
 
-# In[ ]:
+# In[25]:
 
 
 flip_dict = {}
@@ -1196,7 +1244,7 @@ for strategy, ticker_dict_list in all_dict.items():
             flip_dict[ticker_dict['Ticker']]= [strategy]
 
 
-# In[ ]:
+# In[26]:
 
 
 # # Store data (serialize)
@@ -1209,7 +1257,7 @@ with open('flip_dict.pickle', 'wb') as handle:
     pickle.dump(flip_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-# In[ ]:
+# In[27]:
 
 
 # datetime object containing current date and time
@@ -1257,7 +1305,7 @@ with open('interested_tickers.html', 'a') as f:
               f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
 
 
-# In[ ]:
+# In[28]:
 
 
 with open('interested_tickers_hk.html', 'a') as f:
@@ -1298,7 +1346,7 @@ with open('interested_tickers_hk.html', 'a') as f:
               f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
 
 
-# In[ ]:
+# In[29]:
 
 
 with open('interested_tickers_snp.html', 'a') as f:
@@ -1345,7 +1393,7 @@ with open('interested_tickers_snp.html', 'a') as f:
 
 
 
-# In[ ]:
+# In[30]:
 
 
 # The response you are referring to may be difficult to understand because it is a partial code. You can efficiently add multiple arrows by adding a single arrow setting to the list. x,y is the end point of the arrow and ax,ay is the start point of the arrow. I have modified some of the data presented and added the data to draw the arrows along with the points on the scatterplot.
@@ -1386,7 +1434,7 @@ with open('interested_tickers_snp.html', 'a') as f:
 # fig.show()
 
 
-# In[ ]:
+# In[31]:
 
 
 # 'Prices Entry': {'0.25': {'enter': 50.147499084472656,
@@ -1399,15 +1447,19 @@ with open('interested_tickers_snp.html', 'a') as f:
 
 
 
-
-
 # In[ ]:
+
+
+
+
+
+# In[38]:
 
 
 # 7/17 win
 
 
-# In[ ]:
+# In[39]:
 
 
 # 7*600 - 17*300
