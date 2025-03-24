@@ -529,13 +529,13 @@ def exe_bull(df, i):
     pin = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3) and ((df['Open'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
     markup = (df['Close'][i] > df['Open'][i]) and ((df['Close'][i] - df['Open'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
     icecream = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3) and ((df['Close'][i] - df['Open'][i])/(df['High'][i] - df['Low'][i]) >= 1/2)
-    return pin or markup # or icecream
+    return pin or markup or icecream
     
 def exe_bear(df, i):
     pin = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3) and ((df['Open'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3)
     markup = (df['Close'][i] < df['Open'][i]) and ((df['Open'][i] - df['Close'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
     icecream = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) <= 1/3) and ((df['Open'][i] - df['Close'][i])/(df['High'][i] - df['Low'][i]) >= 1/2)
-    return pin or markup # or icecream
+    return pin or markup or icecream
 
 # v5, doesnt make sense to have more than swing 4, because swing 5 onwards is too late if swing 5 is below LP, since must be within 4 bar close back above
 # to check: lowest(low, 2) in TOS means today and yesterday only, 2 is including the current bar
