@@ -244,10 +244,6 @@ forex_list = [
 # In[12]:
 
 
-with open("stock_list.txt", 'w') as f:
-    for ticker in stock_list:
-        f.write(str(ticker) + '\n')
-
 # crypto_list = []
 # with open("crypto_list.txt", 'r') as f:
 #     for line in f:
