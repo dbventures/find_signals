@@ -90,8 +90,8 @@ atr_multiple_urdr = 5
 sma_start = day+1-1 # for uc dc
 sma_end = day+1-4 # for uc dc
 atr_criteria = 1.5 # diff between most recent high and low, for uc dc
-recent_swing_start = day+1-5
-recent_swing_end = day+1-30
+recent_swing_start = day+1-30
+recent_swing_end = day+1-5
 
 risk = 300
 #max_breach = day+1-6 # allow recent 6 days to breach level (for force bottom scenario)
