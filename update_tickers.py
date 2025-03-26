@@ -1285,35 +1285,34 @@ with open('interested_tickers.html', 'a') as f:
     for strategy, ticker_dict_list in all_dict.items():
       f.write(f"<h2>{strategy}</h2>")
       for ticker_dict in ticker_dict_list:
-          ticker = ticker_dict['Ticker']
-          direction = ticker_dict['Direction']
-          entry = ticker_dict['Prices Entry'][prices_entry]
-          if not ticker.endswith('.HK'):
-              #if ticker in stock_list_snp:
-              print(strategy, ticker)
-              df = get_stock_price(ticker, freq = freq)
-              ticker_dict['Volume'] = df['Ave Volume 20'][day]
-              if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
-              else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
-              ticker_dict_no_prices = ticker_dict.copy()
-              prices_dict = ticker_dict_no_prices.pop('Prices Entry')
-              ticker_dict_no_prices.pop('Levels')
-              htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-              df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
-              df_html['direction'] = direction
-              df_html['volume'] = df['Ave Volume 20'][day]
-              df_html['ticker'] = ticker
-              df_html['date'] = datetime.datetime.today()
-              df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
-              htmlText3 = df_html.to_html()
-              f.write(htmlText2 + htmlText3)
-              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
-
-
-
-# In[28]:
+          try:
+              ticker = ticker_dict['Ticker']
+              direction = ticker_dict['Direction']
+              entry = ticker_dict['Prices Entry'][prices_entry]
+              if not ticker.endswith('.HK'):
+                  #if ticker in stock_list_snp:
+                  print(strategy, ticker)
+                  df = get_stock_price(ticker, freq = freq)
+                  ticker_dict['Volume'] = df['Ave Volume 20'][day]
+                  if (ticker_dict.get('FS Bar', None)):
+                      fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
+                  else:
+                      fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
+                  ticker_dict_no_prices = ticker_dict.copy()
+                  prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+                  ticker_dict_no_prices.pop('Levels')
+                  htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+                  df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+                  df_html['direction'] = direction
+                  df_html['volume'] = df['Ave Volume 20'][day]
+                  df_html['ticker'] = ticker
+                  df_html['date'] = datetime.datetime.today()
+                  df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
+                  htmlText3 = df_html.to_html()
+                  f.write(htmlText2 + htmlText3)
+                  f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+          except Exception as e:
+                print(e)
 
 
 with open('interested_tickers_hk.html', 'a') as f:
@@ -1336,31 +1335,32 @@ with open('interested_tickers_hk.html', 'a') as f:
           ticker = ticker_dict['Ticker']
           direction = ticker_dict['Direction']
           entry = ticker_dict['Prices Entry'][prices_entry]
-          if ticker.endswith('.HK'):
-              #if ticker in stock_list_snp:
-              print(strategy, ticker)
-              df = get_stock_price(ticker, freq = freq)
-              ticker_dict['Volume'] = df['Ave Volume 20'][day]
-              if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
-              else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
-              ticker_dict_no_prices = ticker_dict.copy()
-              prices_dict = ticker_dict_no_prices.pop('Prices Entry')
-              ticker_dict_no_prices.pop('Levels')
-              htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-              df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
-              df_html['direction'] = direction
-              df_html['volume'] = df['Ave Volume 20'][day]
-              df_html['ticker'] = ticker
-              df_html['date'] = datetime.datetime.today()
-              df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
-              htmlText3 = df_html.to_html()
-              f.write(htmlText2 + htmlText3)
-              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+          try:
+              if ticker.endswith('.HK'):
+                  #if ticker in stock_list_snp:
+                  print(strategy, ticker)
+                  df = get_stock_price(ticker, freq = freq)
+                  ticker_dict['Volume'] = df['Ave Volume 20'][day]
+                  if (ticker_dict.get('FS Bar', None)):
+                      fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
+                  else:
+                      fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
+                  ticker_dict_no_prices = ticker_dict.copy()
+                  prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+                  ticker_dict_no_prices.pop('Levels')
+                  htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+                  df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+                  df_html['direction'] = direction
+                  df_html['volume'] = df['Ave Volume 20'][day]
+                  df_html['ticker'] = ticker
+                  df_html['date'] = datetime.datetime.today()
+                  df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
+                  htmlText3 = df_html.to_html()
+                  f.write(htmlText2 + htmlText3)
+                  f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+          except Exception as e:
+                  print(e)
 
-
-# In[29]:
 
 
 with open('interested_tickers_snp.html', 'a') as f:
@@ -1380,154 +1380,31 @@ with open('interested_tickers_snp.html', 'a') as f:
     for strategy, ticker_dict_list in all_dict.items():
       f.write(f"<h2>{strategy}</h2>")
       for ticker_dict in ticker_dict_list:
-          ticker = ticker_dict['Ticker']
-          direction = ticker_dict['Direction']
-          entry = ticker_dict['Prices Entry'][prices_entry]
-          #if not ticker.endswith('.HK'):
-          if ticker in stock_list_snp:
-              print(strategy, ticker)
-              df = get_stock_price(ticker, freq = freq)
-              ticker_dict['Volume'] = df['Ave Volume 20'][day]
-              if (ticker_dict.get('FS Bar', None)):
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
-              else:
-                  fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
-              ticker_dict_no_prices = ticker_dict.copy()
-              prices_dict = ticker_dict_no_prices.pop('Prices Entry')
-              ticker_dict_no_prices.pop('Levels')
-              htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-              df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
-              df_html['direction'] = direction
-              df_html['volume'] = df['Ave Volume 20'][day]
-              df_html['ticker'] = ticker
-              df_html['date'] = datetime.datetime.today()
-              df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
-              htmlText3 = df_html.to_html()
-              f.write(htmlText2 + htmlText3)
-              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
-
-# In[ ]:
-
-
-
-
-
-# In[30]:
-
-
-# The response you are referring to may be difficult to understand because it is a partial code. You can efficiently add multiple arrows by adding a single arrow setting to the list. x,y is the end point of the arrow and ax,ay is the start point of the arrow. I have modified some of the data presented and added the data to draw the arrows along with the points on the scatterplot.
-
-# fig = px.scatter(df, x='a', y='b', error_y='c')
-
-# fig.update_xaxes(title_font_family="Trebuchet")
-# fig.update_layout(yaxis=dict(scaleanchor="x", scaleratio=1),
-#                   template = "plotly_white",
-#                   title="<b>V</b>",
-#                  )
-# fig.update_layout(xaxis = dict(autorange="reversed"))
-
-# x_end = [1, 2, 2]
-# y_end = [3, 5, 4]
-# x_start = [0, 1, 3]
-# y_start = [4, 4, 4]
-
-# list_of_all_arrows = []
-# for x0,y0,x1,y1 in zip(x_end, y_end, x_start, y_start):
-#     arrow = go.layout.Annotation(dict(
-#                     x=x0,
-#                     y=y0,
-#                     xref="x", yref="y",
-#                     text="",
-#                     showarrow=True,
-#                     axref="x", ayref='y',
-#                     ax=x1,
-#                     ay=y1,
-#                     arrowhead=3,
-#                     arrowwidth=1.5,
-#                     arrowcolor='rgb(255,51,0)',)
-#                 )
-#     list_of_all_arrows.append(arrow)
-
-# fig.update_layout(annotations=list_of_all_arrows)
-# # fig.write_html("Fig.html")
-# fig.show()
-
-
-# In[31]:
-
-
-# 'Prices Entry': {'0.25': {'enter': 50.147499084472656,
-#      'take_profit': 57.34249786376954,
-#      'stop_loss': 46.549999694824216,
-#      'n_shares': 62.54344355065693,
-#      'more_than_atr': True},
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[38]:
-
-
-# 7/17 win
-
-
-# In[39]:
-
-
-# 7*600 - 17*300
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
+          try:
+              ticker = ticker_dict['Ticker']
+              direction = ticker_dict['Direction']
+              entry = ticker_dict['Prices Entry'][prices_entry]
+              #if not ticker.endswith('.HK'):
+              if ticker in stock_list_snp:
+                  print(strategy, ticker)
+                  df = get_stock_price(ticker, freq = freq)
+                  ticker_dict['Volume'] = df['Ave Volume 20'][day]
+                  if (ticker_dict.get('FS Bar', None)):
+                      fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
+                  else:
+                      fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
+                  ticker_dict_no_prices = ticker_dict.copy()
+                  prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+                  ticker_dict_no_prices.pop('Levels')
+                  htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+                  df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+                  df_html['direction'] = direction
+                  df_html['volume'] = df['Ave Volume 20'][day]
+                  df_html['ticker'] = ticker
+                  df_html['date'] = datetime.datetime.today()
+                  df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
+                  htmlText3 = df_html.to_html()
+                  f.write(htmlText2 + htmlText3)
+                  f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+          except Exception as e:
+                print(e)
