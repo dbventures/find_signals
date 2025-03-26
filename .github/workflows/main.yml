@@ -32,11 +32,7 @@ jobs:
       - name: Clone repo from your github.io page and commit newly generated html file
         run: | #change all the "username"s below to your username
           git clone https://github.com/dbventures/dbventures.github.io.git/
-          cp interested_tickers.html dbventures.github.io/interested_tickers.html
-          cp interested_tickers.pickle dbventures.github.io/interested_tickers.pickle
-          cp interested_tickers_hk.html dbventures.github.io/interested_tickers_hk.html
-          cp interested_tickers_snp.html dbventures.github.io/interested_tickers_snp.html
-          cp flip_dict.pickle dbventures.github.io/flip_dict.pickle
+          cp * dbventures.github.io/
           
           cd dbventures.github.io
           git add .
