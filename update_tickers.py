@@ -496,7 +496,7 @@ def find_recent_levels(df, i, j):
     #for i in range(2, df.shape[0] - 2): # exclude most recent 10 bars, anyway the -2 is cos need 2 more bars in the fractal
 
     # from most recent to some bars earlier, maybe i can be -10, j can be -30 for e.g., i cannot be -1, need 2 bars after at least
-    for k in range(i, j-1, -1):
+    for k in range(i, j-1, 1):
 
         if is_support_harderv2(df, k):
             low = df['Low'][k]
