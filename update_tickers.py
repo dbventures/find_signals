@@ -1300,9 +1300,16 @@ with open('interested_tickers.html', 'a') as f:
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
               htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-              htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
+              df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+              df_html['direction'] = direction
+              df_html['volume'] = df['Ave Volume 20'][day]
+              df_html['ticker'] = ticker
+              df_html['date'] = datetime.datetime.today()
+              df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
+              htmlText3 = df_html.to_html()
               f.write(htmlText2 + htmlText3)
               f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+
 
 
 # In[28]:
@@ -1341,7 +1348,13 @@ with open('interested_tickers_hk.html', 'a') as f:
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
               htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-              htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
+              df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+              df_html['direction'] = direction
+              df_html['volume'] = df['Ave Volume 20'][day]
+              df_html['ticker'] = ticker
+              df_html['date'] = datetime.datetime.today()
+              df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
+              htmlText3 = df_html.to_html()
               f.write(htmlText2 + htmlText3)
               f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
 
@@ -1382,10 +1395,15 @@ with open('interested_tickers_snp.html', 'a') as f:
               prices_dict = ticker_dict_no_prices.pop('Prices Entry')
               ticker_dict_no_prices.pop('Levels')
               htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
-              htmlText3 = pd.DataFrame.from_dict(prices_dict, orient='index').to_html()
+              df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+              df_html['direction'] = direction
+              df_html['volume'] = df['Ave Volume 20'][day]
+              df_html['ticker'] = ticker
+              df_html['date'] = datetime.datetime.today()
+              df_html = df_html.reset_index()[['date', 'ticker', 'direction', 'volume', 'index', 'enter', 'take_profit', 'stop_loss', 'n_shares', 'more_than_atr']]
+              htmlText3 = df_html.to_html()
               f.write(htmlText2 + htmlText3)
-              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html file
-
+              f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
 
 # In[ ]:
 
