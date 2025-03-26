@@ -884,7 +884,8 @@ def bullish_uc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
             most_recent_low_index = most_recent_low[0] # first one that went into the list
             most_recent_high_index = most_recent_high[0]
             # we want this, low occured first then high, bullish, so can check for force bottom
-            if (most_recent_low_index < most_recent_high_index) and (most_recent_high[1] - most_recent_low[1] > atr_criteria*df['ATR20'][i]):
+            # high more recent than low and at least 3 candles apart
+            if (most_recent_high_index - most_recent_low_index >= 3) and (most_recent_high[1] - most_recent_low[1] > atr_criteria*df['ATR20'][i]):
 
                 # exe already tested in above_sma
                 if df['Close'][i] >= most_recent_low[1]: # close above recent low, the low of candle can still be below
@@ -923,8 +924,8 @@ def bearish_dc1(df, i, sma_start = -1, sma_end = -6, recent_swing_start = -6, re
             most_recent_high = recent_highs[0]
             most_recent_low_index = most_recent_low[0] # first one that went into the list
             most_recent_high_index = most_recent_high[0]
-            # we want this, high occured first then low, bearish, then now high again, so can check for force top
-            if (most_recent_high_index < most_recent_low_index) and (most_recent_high[1] - most_recent_low[1] > atr_criteria*df['ATR20'][i]):
+            # low more recent than high and at least 3 candles apart
+            if (most_recent_low_index - most_recent_high_index >= 3) and (most_recent_high[1] - most_recent_low[1] > atr_criteria*df['ATR20'][i]):
 
                 # exe already tested in below_sma
                 if df['Close'][i] <= most_recent_high[1]: # close back below recent high, the high of candle can still be above
