@@ -32,7 +32,7 @@ jobs:
       - name: Clone repo from your github.io page and commit newly generated html file
         run: | #change all the "username"s below to your username
           git clone https://github.com/dbventures/dbventures.github.io.git/
-          cp -r !(dbventures.github.io) dbventures.github.io/
+          cp -r !dbventures.github.io dbventures.github.io/
           cd dbventures.github.io
           git add .
           git config --local user.email "action@github.com"
