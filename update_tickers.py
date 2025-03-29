@@ -58,7 +58,7 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # In[41]:
 
 #day_list = [-5, -6, -8, -10, -12, -15, -18, -20, -22, -25, -28, -30, -35]
-day_list = [-1,-2,-3,-4,-5,-10 -15,-18]
+day_list = [-1]
 #day_list = range(-1, -300, -1)
 
 for day in day_list:
@@ -1295,10 +1295,11 @@ for day in day_list:
                       df_html['ticker'] = ticker
                       df_html['date'] = dt_string
                       df_html['value'] = df_html['n_shares']*df_html['enter']
+                      df_html['strategy'] = strategy
                       df_html = df_html.reset_index()[[
                           'date', 'ticker', 'direction', 'volume', 
                           'index', 'enter', 'take_profit', 'stop_loss', 
-                          'n_shares', 'more_than_atr', 'value']]
+                          'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
@@ -1346,10 +1347,11 @@ for day in day_list:
                       df_html['ticker'] = ticker
                       df_html['date'] = dt_string
                       df_html['value'] = df_html['n_shares']*df_html['enter']
+                      df_html['strategy'] = strategy
                       df_html = df_html.reset_index()[[
                           'date', 'ticker', 'direction', 'volume', 
                           'index', 'enter', 'take_profit', 'stop_loss', 
-                          'n_shares', 'more_than_atr', 'value']]
+                          'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
@@ -1397,10 +1399,11 @@ for day in day_list:
                       df_html['ticker'] = ticker
                       df_html['date'] = dt_string
                       df_html['value'] = df_html['n_shares']*df_html['enter']
+                      df_html['strategy'] = strategy
                       df_html = df_html.reset_index()[[
                           'date', 'ticker', 'direction', 'volume', 
                           'index', 'enter', 'take_profit', 'stop_loss', 
-                          'n_shares', 'more_than_atr', 'value']]
+                          'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
