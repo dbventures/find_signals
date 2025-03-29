@@ -58,7 +58,7 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # In[41]:
 
 #day_list = [-5, -6, -8, -10, -12, -15, -18, -20, -22, -25, -28, -30, -35]
-day_list = [-1]
+day_list = [-1, -2, -5, -10, -15]
 #day_list = range(-1, -300, -1)
 
 for day in day_list:
