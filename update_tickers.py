@@ -1081,7 +1081,7 @@ for day in day_list:
                 ticker_df['Force Top'] = level
                 ticker_df['Prices Entry'] = get_enter_prices(df, day, ticker, direction =  ticker_df['Direction'], risk = 300, currency = 'USD', ratio = risk_reward_ratio)
                 all_dict['bear_fs'].append(ticker_df)
-            elif force_bottom == False:
+            elif force_top == False:
                 print("No force top")
                 ticker_df['Force Top'] = False
 
