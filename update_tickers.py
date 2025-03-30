@@ -266,10 +266,10 @@ for day in day_list:
     # In[14]:
 
 
-    # crypto_list = []
-    # with open("crypto_list.txt", 'r') as f:
-    #     for line in f:
-    #         crypto_list.append(line.rstrip('\n'))
+    crypto_list = []
+    with open("crypto_list.txt", 'r') as f:
+        for line in f:
+            crypto_list.append(line.rstrip('\n'))
 
     stock_list = []
     with open("stock_list.txt", 'r') as f:
@@ -279,6 +279,7 @@ for day in day_list:
     print(len(stock_list))
 
     stock_list_all = set(stock_list_snp).union(set(stock_list))
+    stock_list_all = list(stock_list_all) + crypto_list
 
     # for debugging only
     # stock_list_all = list(stock_list_all)[:10]
@@ -1409,3 +1410,56 @@ for day in day_list:
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
               except Exception as e:
                     print(e)
+
+    with open(f'interested_tickers_crypto_days_{day}.html', 'a') as f:
+        f.truncate(0) # clear file if something is already written on it
+        #title = "<h1>Tickers</h1>"
+        #f.write(title)
+        updated = "<h3>Last updated: <span id='timestring'></span></h3>"
+        # GitHub Actions server timezone may not be at the same timezone of person opening the page on browser
+        # hence Javascript code is written below to convert to client timezone before printing it on
+        current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
+        htmlLines = []
+        for textLine in pprint.pformat(flip_dict).splitlines():
+          if textLine.split("':")[0].split("'")[1] in crypto_list:
+            htmlLines.append('<br/>%s' % textLine) # or something even nicer
+        htmlText = '\n'.join(htmlLines)
+    
+        f.write(updated + current_time + htmlText)
+        for strategy, ticker_dict_list in all_dict.items():
+          f.write(f"<h2>{strategy}</h2>")
+          for ticker_dict in ticker_dict_list:
+              try:
+                  ticker = ticker_dict['Ticker']
+                  direction = ticker_dict['Direction']
+                  entry = ticker_dict['Prices Entry'][prices_entry]
+                  #if not ticker.endswith('.HK'):
+                  if ticker in crypto_list:
+                      print(strategy, ticker)
+                      df = get_stock_price(ticker, freq = freq)
+                      ticker_dict['Volume'] = df['Ave Volume 20'][day]
+                      if (ticker_dict.get('FS Bar', None)):
+                          fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry, fs_bar = ticker_dict['FS Bar'])
+                      else:
+                          fig = plot_all_with_return(ticker_dict['Levels'],df,day,ticker + ': ' + strategy, direction, entry)
+                      ticker_dict_no_prices = ticker_dict.copy()
+                      prices_dict = ticker_dict_no_prices.pop('Prices Entry')
+                      ticker_dict_no_prices.pop('Levels')
+                      htmlText2 = pd.DataFrame.from_dict(ticker_dict_no_prices, orient='index').to_html()
+                      df_html = pd.DataFrame.from_dict(prices_dict, orient='index')
+                      df_html['direction'] = direction
+                      df_html['volume'] = df['Ave Volume 20'][day]
+                      df_html['ticker'] = ticker
+                      df_html['date'] = dt_string
+                      df_html['value'] = df_html['n_shares']*df_html['enter']
+                      df_html['strategy'] = strategy
+                      df_html = df_html.reset_index()[[
+                          'date', 'ticker', 'direction', 'volume', 
+                          'index', 'enter', 'take_profit', 'stop_loss', 
+                          'n_shares', 'more_than_atr', 'value', 'strategy']]
+                      htmlText3 = df_html.to_html()
+                      f.write(htmlText2 + htmlText3)
+                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+              except Exception as e:
+                    print(e)
+    
