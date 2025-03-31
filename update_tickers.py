@@ -1424,8 +1424,11 @@ for day in day_list:
         current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
         htmlLines = []
         for textLine in pprint.pformat(flip_dict).splitlines():
-          if textLine.split("':")[0].split("'")[1] in crypto_list:
-            htmlLines.append('<br/>%s' % textLine) # or something even nicer
+            try:
+              if textLine.split("':")[0].split("'")[1] in crypto_list:
+                htmlLines.append('<br/>%s' % textLine) # or something even nicer
+            except:
+                 htmlLines.append('<br/>Might be error%s ' % textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
