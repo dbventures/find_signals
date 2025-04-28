@@ -1546,11 +1546,11 @@ for market, file_path in file_paths.items():
         "content": f"Signal detected for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)",
     }
     for index, image_file in enumerate(image_files):
-        file_path = os.path.join(image_folder_path, image_file)
+        image_file_path = os.path.join(image_folder_path, image_file)
         
-        with open(file_path, "rb") as img:
+        with open(image_file_path, "rb") as img:
             files = {
-                "file": (file_path, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
+                "file": (image_file_path, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
             }
             #files[f"file{index + 1}"] = (image_file, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
         
