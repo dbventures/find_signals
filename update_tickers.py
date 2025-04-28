@@ -1016,7 +1016,7 @@ for day in day_list:
 
     # can consider to append df if match also, so no need to scrape again
     # loop through each symbol
-    for i, ticker in enumerate(stock_list_all[:1000]): # i is mainly for printing only
+    for i, ticker in enumerate(stock_list_all[:2000]): # i is mainly for printing only
       #ticker = ticker.replace(".", "-")
       try:
         df = get_stock_price(ticker, freq = freq)
@@ -1544,7 +1544,7 @@ for market, file_path in file_paths.items():
     for index, image_file in enumerate(image_files):
         file_path = os.path.join(image_folder_path, image_file)
         
-        with open(file_path, "rb") as img:
+        with open(image_file "rb") as img:
             files = {
                 "file": (image_file, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
             }
