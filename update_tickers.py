@@ -1544,7 +1544,7 @@ for market, file_path in file_paths.items():
     for index, image_file in enumerate(image_files):
         file_path = os.path.join(image_folder_path, image_file)
         
-        with open(image_file "rb") as img:
+        with open(image_file, "rb") as img:
             files = {
                 "file": (image_file, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
             }
