@@ -27,6 +27,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute python script to update tickers page
+        env:
+          DISCORD_WEBHOOK_TOKEN: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
         run: python -u update_tickers.py
 
       - name: Clone repo from your github.io page and commit newly generated html file
