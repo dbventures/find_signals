@@ -67,11 +67,36 @@ string_4y_ago = (today - relativedelta(years=4)).strftime('%Y-%m-%d')
 string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 
 
+# send to discord later
+file_paths = {
+    "US Market": "interested_tickers_days_-1.html",
+    "HK Market": "interested_tickers_hk_days_{day}.html",
+    "Crypto Market": "interested_tickers_crypto_days_{day}.html",
+}
+
+signal_texts = {
+    "US Market": us_text,
+    "HK Market": hk_text,
+    "Crypto Market": crypto_text,
+}
+
+image_folder_paths = {
+    "US Market": "us_images",
+    "HK Market": "hk_images",
+    "Crypto Market": "crypto_images",
+}
+
+for folder in image_folder_paths.values():
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
+
 
 # In[41]:
 
 #day_list = [-5, -6, -8, -10, -12, -15, -18, -20, -22, -25, -28, -30, -35]
-day_list = [-1, -5, -10, -15. -18]
+#day_list = [-1, -5, -10, -15. -18]
+day_list = [-1]
 #day_list = range(-1, -300, -1)
 
 for day in day_list:
@@ -985,7 +1010,7 @@ for day in day_list:
 
     # can consider to append df if match also, so no need to scrape again
     # loop through each symbol
-    for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
+    for i, ticker in enumerate(stock_list_all[:300]): # i is mainly for printing only
       #ticker = ticker.replace(".", "-")
       try:
         df = get_stock_price(ticker, freq = freq)
@@ -1319,7 +1344,10 @@ for day in day_list:
                           'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
-                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
+                      if day == -1:
+                          fig.write_image(f"{image_folder_paths["US Market"]}/{ticker}_{strategy}.png")
+                      
               except Exception as e:
                     print(e)
                     
@@ -1374,7 +1402,9 @@ for day in day_list:
                           'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
-                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
+                      if day == -1:
+                         fig.write_image(f"{image_folder_paths["HK Market"]}/{ticker}_{strategy}.png")
               except Exception as e:
                       print(e)
                     
@@ -1429,7 +1459,7 @@ for day in day_list:
                           'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
-                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
               except Exception as e:
                     print(e)
 
@@ -1487,28 +1517,13 @@ for day in day_list:
                           'n_shares', 'more_than_atr', 'value', 'strategy']]
                       htmlText3 = df_html.to_html()
                       f.write(htmlText2 + htmlText3)
-                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
+                      f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
+                      if day == -1:
+                         fig.write_image(f"{image_folder_paths["Crypto Market"]}/{ticker}_{strategy}.png")
               except Exception as e:
                     print(e)
 
-# send to discord
-file_paths = {
-    "US Market": "interested_tickers_days_-1.html",
-    "HK Market": "interested_tickers_hk_days_{day}.html",
-    "Crypto Market": "interested_tickers_crypto_days_{day}.html",
-}
 
-signal_texts = {
-    "US Market": us_text,
-    "HK Market": hk_text,
-    "Crypto Market": crypto_text,
-}
-
-image_folder_paths = {
-    "US Market": "us_images",
-    "HK Market": "hk_images",
-    "Crypto Market": "crypto_images",
-}
 
 for market, file_path in filepaths.items():
     # Loop through the image files in the folder and send them
