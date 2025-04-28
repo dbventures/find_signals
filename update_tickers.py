@@ -1016,7 +1016,7 @@ for day in day_list:
 
     # can consider to append df if match also, so no need to scrape again
     # loop through each symbol
-    for i, ticker in enumerate(stock_list_all[:1000]): # i is mainly for printing only
+    for i, ticker in enumerate(stock_list_all[:2000]): # i is mainly for printing only
       #ticker = ticker.replace(".", "-")
       try:
         df = get_stock_price(ticker, freq = freq)
@@ -1353,8 +1353,8 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png", width=1400, height=800)
                           #fig.write_image(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png")
-                          with open(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.txt", "a") as f:
-                              f.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                          with open(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.txt", "a") as f2:
+                              f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
                          
                       
               except Exception as e:
@@ -1415,8 +1415,8 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png", width=1400, height=800)
                           #fig.write_image(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png")
-                          with open(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.txt", "a") as f:
-                              f.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                          with open(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.txt", "a") as f2:
+                              f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
               except Exception as e:
                       print(e)
                     
@@ -1533,8 +1533,8 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png", width=1400, height=800)
                           #fig.write_image(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png")
-                          with open(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.txt", "a") as f:
-                              f.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                          with open(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.txt", "a") as f2:
+                              f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
                               
               except Exception as e:
                     print(e)
