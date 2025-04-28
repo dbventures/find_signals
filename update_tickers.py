@@ -1576,6 +1576,14 @@ for market, file_path in file_paths.items():
             "flags": 4096  # Suppress embeds
         }
         response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
+
+        files = {
+            "file": (file_path, f, "text/html")
+        }
+        payload = {
+            "content": f"Interactive charts for all above signals for the {market}.\nPlease DOWNLOAD the HTML file and open in your browser to view! :)\n{signal_texts[market]}",
+            "flags": 4096  # Suppress embeds
+        }
         response = requests.post(DISCORD_WEBHOOK_URL2, data=payload, files=files)
         
         # Check the response
