@@ -1017,7 +1017,7 @@ for day in day_list:
 
     # can consider to append df if match also, so no need to scrape again
     # loop through each symbol
-    stock_list_all = ['ABSI', 'BRK-B', 'EQT', 'VBNK', 'WERN'] # for testing only, uncomment when not testing!
+    # stock_list_all = ['ABSI', 'BRK-B', 'EQT', 'VBNK', 'WERN'] # for testing only, uncomment when not testing!
     for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
       #ticker = ticker.replace(".", "-")
       try:
@@ -1563,7 +1563,7 @@ for market, file_path in file_paths.items():
         with open(text_file_path) as f:
               markdown_table = f.read()
         payload = {
-            "content": f"Signal detected for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)\n\n{signal_name}\n\n{markdown_table}",
+            "content": f"Signal detected for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)\n\n{signal_name}\n{markdown_table}",
         }
         
         with open(image_file_path, "rb") as img:
