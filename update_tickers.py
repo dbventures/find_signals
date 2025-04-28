@@ -1506,7 +1506,7 @@ for market, file_path in filepaths.items():
             "file": (file_path, f, "text/html")
         }
         payload = {
-            "content": f"These are the current signals for the {market}.{signal_texts[market]}\nPlease DOWNLOAD the HTML file and open in your browser to view! :)",
+            "content": f"These are the current signals for the {market}.\nPlease DOWNLOAD the HTML file and open in your browser to view! :)\n{signal_texts[market]}",
             "flags": 4096  # Suppress embeds
         }
         response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
