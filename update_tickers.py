@@ -1545,9 +1545,9 @@ for market, file_path in file_paths.items():
 
     for index, image_file in enumerate(image_files):
         image_file_path = os.path.join(image_folder_path, image_file)
-
+        signal_name = image_file[:-4]
         payload = {
-            "content": f"Signal detected for the {market} in this chart: {image_file}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)",
+            "content": f"Signal detected for the {market}.\n{signal_name}\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)",
         }
         
         with open(image_file_path, "rb") as img:
