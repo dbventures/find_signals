@@ -36,6 +36,8 @@ import os
 import requests
 
 # for discord
+import kaleido
+
 DISCORD_WEBHOOK_TOKEN = os.getenv("DISCORD_WEBHOOK_TOKEN")
 DISCORD_WEBHOOK_TOKEN2 = os.getenv("DISCORD_WEBHOOK_TOKEN2")
 
@@ -70,8 +72,8 @@ string_5d_ago = (today - relativedelta(days=5)).strftime('%Y-%m-%d')
 # send to discord later
 file_paths = {
     "US Market": "interested_tickers_days_-1.html",
-    "HK Market": "interested_tickers_hk_days_{day}.html",
-    "Crypto Market": "interested_tickers_crypto_days_{day}.html",
+    "HK Market": "interested_tickers_hk_days_-1.html",
+    "Crypto Market": "interested_tickers_crypto_days_-1.html",
 }
 
 us_text = ''
