@@ -1355,9 +1355,10 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png", width=1400, height=800)
                           #fig.write_image(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png")
+                          df_markdown = df_html[['direction', 'volume', 'enter', 'take_profit', 'stop_loss', 'n_shares']]
                           with open(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.txt", "a") as f2:
-                              f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
-                          print(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                              f2.write(f"```{df_markdown.to_markdown(tablefmt='grid')}```")
+                          print(f"```{df_markdown.to_markdown(tablefmt='grid')}```")
                          
                       
               except Exception as e:
@@ -1418,8 +1419,9 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png", width=1400, height=800)
                           #fig.write_image(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png")
+                          df_markdown = df_html[['direction', 'volume', 'enter', 'take_profit', 'stop_loss', 'n_shares']]
                           with open(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.txt", "a") as f2:
-                              f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                              f2.write(f"```{df_markdown.to_markdown(tablefmt='grid')}```")
               except Exception as e:
                       print(e)
                     
@@ -1536,8 +1538,9 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png", width=1400, height=800)
                           #fig.write_image(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png")
+                          df_markdown = df_html[['direction', 'volume', 'enter', 'take_profit', 'stop_loss', 'n_shares']]
                           with open(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.txt", "a") as f2:
-                              f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                              f2.write(f"```{df_markdown.to_markdown(tablefmt='grid')}```")
                               
               except Exception as e:
                     print(e)
