@@ -1355,6 +1355,7 @@ for day in day_list:
                           #fig.write_image(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png")
                           with open(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.txt", "a") as f2:
                               f2.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
+                          print(f"```{df_html.to_markdown(tablefmt='grid')}```")
                          
                       
               except Exception as e:
