@@ -74,6 +74,10 @@ file_paths = {
     "Crypto Market": "interested_tickers_crypto_days_{day}.html",
 }
 
+us_text = ''
+hk_text = ''
+crypto_text = ''
+
 signal_texts = {
     "US Market": us_text,
     "HK Market": hk_text,
@@ -1302,12 +1306,11 @@ for day in day_list:
         # hence Javascript code is written below to convert to client timezone before printing it on
         current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
         htmlLines = []
-        us_text = ''
         for textLine in pprint.pformat(flip_dict).splitlines():
           if '.HK' not in textLine:
               htmlLines.append('<br/>%s' % textLine) # or something even nicer
               if day == -1:
-                  us_text += ('\n' + textLine) # or something even nicer
+                  signal_texts["US Market"] += ('\n' + textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
@@ -1365,7 +1368,7 @@ for day in day_list:
           if '.HK' in textLine:
               htmlLines.append('<br/>%s' % textLine) # or something even nicer
               if day == -1:
-                  hk_text += ('\n' + textLine) # or something even nicer
+                  signal_texts["HK Market"] += ('\n' + textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
@@ -1478,7 +1481,7 @@ for day in day_list:
               if textLine.split("':")[0].split("'")[1] in crypto_list:
                 htmlLines.append('<br/>%s' % textLine) # or something even nicer
                 if day == -1:
-                    crypto_text += ('\n' + textLine) # or something even nicer
+                    signal_texts["Crypto Market"] += ('\n' + textLine) # or something even nicer
             except:
                  htmlLines.append('<br/>Might be error%s ' % textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
