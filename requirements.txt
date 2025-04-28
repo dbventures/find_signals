@@ -11,5 +11,4 @@ mplfinance==0.12.10b0
 lxml
 yahooquery==2.3.1
 kaleido
-
-
+tabulate
