@@ -1272,9 +1272,12 @@ for day in day_list:
         # hence Javascript code is written below to convert to client timezone before printing it on
         current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
         htmlLines = []
+        us_text = ''
         for textLine in pprint.pformat(flip_dict).splitlines():
           if '.HK' not in textLine:
               htmlLines.append('<br/>%s' % textLine) # or something even nicer
+              if day == -1:
+                  us_text.append('\n%s' % textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
@@ -1324,9 +1327,12 @@ for day in day_list:
         # hence Javascript code is written below to convert to client timezone before printing it on
         current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
         htmlLines = []
+        hk_text = ''
         for textLine in pprint.pformat(flip_dict).splitlines():
           if '.HK' in textLine:
               htmlLines.append('<br/>%s' % textLine) # or something even nicer
+              if day == -1:
+                  hk_text.append('\n%s' % textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
@@ -1431,10 +1437,13 @@ for day in day_list:
         # hence Javascript code is written below to convert to client timezone before printing it on
         current_time = "<script>var date = new Date('" + dt_string + " " + timezone_string + "'); document.getElementById('timestring').innerHTML += date.toString()</script>"
         htmlLines = []
+        crypto_text = ''
         for textLine in pprint.pformat(flip_dict).splitlines():
             try:
               if textLine.split("':")[0].split("'")[1] in crypto_list:
                 htmlLines.append('<br/>%s' % textLine) # or something even nicer
+                if day == -1:
+                    crypto_text.append('\n%s' % textLine) # or something even nicer
             except:
                  htmlLines.append('<br/>Might be error%s ' % textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
@@ -1480,8 +1489,14 @@ for day in day_list:
 # send to discord
 file_paths = {
     "US Market": "interested_tickers_days_-1.html",
+    "HK Market": "interested_tickers_hk_days_{day}.html",
     "Crypto Market": "interested_tickers_crypto_days_{day}.html",
-    "HK Market": "interested_tickers_hk_days_{day}.html"
+}
+
+signal_texts = {
+    "US Market": us_text,
+    "HK Market": hk_text,
+    "Crypto Market": crypto_text,
 }
 
 for market, file_path in filepaths.items():
@@ -1491,7 +1506,7 @@ for market, file_path in filepaths.items():
             "file": (file_path, f, "text/html")
         }
         payload = {
-            "content": f"These are the current signals for the {market}. Please download the HTML file and open in your browser to view! :)",
+            "content": f"These are the current signals for the {market}.{signal_texts[market]}\nPlease DOWNLOAD the HTML file and open in your browser to view! :)",
             "flags": 4096  # Suppress embeds
         }
         response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
