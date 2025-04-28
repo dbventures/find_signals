@@ -1543,7 +1543,7 @@ for market, file_path in file_paths.items():
     # with images
     # Prepare the payload (message)
     payload = {
-        "content": f"Signal for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of all the signal charts and open in your browser to view! :)",
+        "content": f"Signal detected for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)",
     }
     for index, image_file in enumerate(image_files):
         file_path = os.path.join(image_folder_path, image_file)
@@ -1576,8 +1576,8 @@ for market, file_path in file_paths.items():
         response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
         response = requests.post(DISCORD_WEBHOOK_URL2, data=payload, files=files)
         
-    # Check the response
-    if response.status_code == 200:
-        print(f"Successfully sent the file for {market}!")
-    else:
-        print(f"Failed to send file for {market}! Status code: {response.status_code}, response: {response.text}")
+        # Check the response
+        if response.status_code == 200:
+            print(f"Successfully sent the file for {market}!")
+        else:
+            print(f"Failed to send file for {market}! Status code: {response.status_code}, response: {response.text}")
