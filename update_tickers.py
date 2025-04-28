@@ -1354,7 +1354,7 @@ for day in day_list:
                           pio.write_image(fig, f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png")
                           with open(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.txt", "a") as f:
-                              f.write(f"```{df_html.to_markdown(tablefmt="grid")}```")
+                              f.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
                          
                       
               except Exception as e:
@@ -1416,7 +1416,7 @@ for day in day_list:
                           pio.write_image(fig, f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png")
                           with open(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.txt", "a") as f:
-                              f.write(f"```{df_html.to_markdown(tablefmt="grid")}```")
+                              f.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
               except Exception as e:
                       print(e)
                     
@@ -1534,7 +1534,7 @@ for day in day_list:
                           pio.write_image(fig, f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png")
                           with open(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.txt", "a") as f:
-                              f.write(f"```{df_html.to_markdown(tablefmt="grid")}```")
+                              f.write(f"```{df_html.to_markdown(tablefmt='grid')}```")
                               
               except Exception as e:
                     print(e)
