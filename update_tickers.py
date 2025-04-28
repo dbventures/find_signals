@@ -1351,7 +1351,7 @@ for day in day_list:
                       f.write(htmlText2 + htmlText3)
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
                       if day == -1:
-                          pio.write_image(fig, f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png", width=1200, height=800)
+                          pio.write_image(fig, f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png")
                       
               except Exception as e:
@@ -1410,7 +1410,7 @@ for day in day_list:
                       f.write(htmlText2 + htmlText3)
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
                       if day == -1:
-                          pio.write_image(fig, f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png", width=1200, height=800)
+                          pio.write_image(fig, f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png")
               except Exception as e:
                       print(e)
@@ -1526,7 +1526,7 @@ for day in day_list:
                       f.write(htmlText2 + htmlText3)
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html
                       if day == -1:
-                          pio.write_image(fig, f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png", width=1200, height=800)
+                          pio.write_image(fig, f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png")
               except Exception as e:
                     print(e)
