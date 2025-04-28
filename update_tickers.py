@@ -1576,7 +1576,17 @@ for market, file_path in file_paths.items():
             "flags": 4096  # Suppress embeds
         }
         response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
+        
+        # Check the response
+        if response.status_code == 200:
+            print(f"Successfully sent the file for {market}!")
+        else:
+            print(f"Failed to send file for {market}! Status code: {response.status_code}, response: {response.text}")
 
+
+    # html only
+    # Open the file in binary mode
+    with open(file_path, "rb") as f:
         files = {
             "file": (file_path, f, "text/html")
         }
