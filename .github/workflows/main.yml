@@ -29,6 +29,7 @@ jobs:
       - name: Execute python script to update tickers page
         env:
           DISCORD_WEBHOOK_TOKEN: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+          DISCORD_WEBHOOK_TOKEN2: ${{ secrets.DISCORD_WEBHOOK_TOKEN2 }}
         run: python -u update_tickers.py
 
       - name: Clone repo from your github.io page and commit newly generated html file
