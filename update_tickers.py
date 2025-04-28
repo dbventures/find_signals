@@ -38,7 +38,7 @@ import requests
 # for discord
 DISCORD_WEBHOOK_TOKEN = os.getenv("DISCORD_WEBHOOK_TOKEN")
 
-if not WEBHOOK_URL:
+if not DISCORD_WEBHOOK_TOKEN:
     raise ValueError("No DISCORD_WEBHOOK_TOKEN found in environment variables!")
 
 DISCORD_WEBHOOK_URL = f"https://discord.com/api/webhooks/{DISCORD_WEBHOOK_TOKEN}"
@@ -1494,7 +1494,7 @@ for market, file_path in filepaths.items():
             "content": f"These are the current signals for the {market}. Please download the HTML file and open in your browser to view! :)",
             "flags": 4096  # Suppress embeds
         }
-        response = requests.post(WEBHOOK_URL, data=payload, files=files)
+        response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
 
     # Check the response
     if response.status_code == 200:
