@@ -37,11 +37,16 @@ import requests
 
 # for discord
 DISCORD_WEBHOOK_TOKEN = os.getenv("DISCORD_WEBHOOK_TOKEN")
+DISCORD_WEBHOOK_TOKEN2 = os.getenv("DISCORD_WEBHOOK_TOKEN2")
 
 if not DISCORD_WEBHOOK_TOKEN:
     raise ValueError("No DISCORD_WEBHOOK_TOKEN found in environment variables!")
 
+if not DISCORD_WEBHOOK_TOKEN2:
+    raise ValueError("No DISCORD_WEBHOOK_TOKEN2 found in environment variables!")
+
 DISCORD_WEBHOOK_URL = f"https://discord.com/api/webhooks/{DISCORD_WEBHOOK_TOKEN}"
+DISCORD_WEBHOOK_URL2 = f"https://discord.com/api/webhooks/{DISCORD_WEBHOOK_TOKEN2}"
 
 # For parsing financial statements data from financialmodelingprep api
 from urllib.request import urlopen
@@ -1499,8 +1504,43 @@ signal_texts = {
     "Crypto Market": crypto_text,
 }
 
+image_folder_paths = {
+    "US Market": "us_images",
+    "HK Market": "hk_images",
+    "Crypto Market": "crypto_images",
+}
+
 for market, file_path in filepaths.items():
-# Open the file in binary mode
+    # Loop through the image files in the folder and send them
+    image_folder_path = image_folder_paths[market]
+    # List all files in the folder and filter to get only image files
+    image_files = [f for f in os.listdir(image_folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+
+    # with images
+    # Prepare the payload (message)
+    payload = {
+        "content": f"Signal for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of all the signal charts and open in your browser to view! :)",
+    }
+    for index, image_file in enumerate(image_files):
+        file_path = os.path.join(image_folder_path, image_file)
+        
+        with open(file_path, "rb") as img:
+            files = {
+                "file": (image_file, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
+            }
+            #files[f"file{index + 1}"] = (image_file, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
+        
+        # Send the image files via POST request
+        response = requests.post(DISCORD_WEBHOOK_URL2, data=payload, files=files)
+    
+        # Check the response
+        if response.status_code == 200:
+            print(f"Successfully sent {image_file}")
+        else:
+            print(f"Failed to send {image_file}. Status code: {response.status_code}, response: {response.text}")
+
+    # html only
+    # Open the file in binary mode
     with open(file_path, "rb") as f:
         files = {
             "file": (file_path, f, "text/html")
@@ -1510,7 +1550,8 @@ for market, file_path in filepaths.items():
             "flags": 4096  # Suppress embeds
         }
         response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files)
-
+        response = requests.post(DISCORD_WEBHOOK_URL2, data=payload, files=files)
+        
     # Check the response
     if response.status_code == 200:
         print(f"Successfully sent the file for {market}!")
