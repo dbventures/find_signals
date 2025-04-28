@@ -35,6 +35,14 @@ import pickle
 import os
 import requests
 
+# for discord
+DISCORD_WEBHOOK_TOKEN = os.getenv("DISCORD_WEBHOOK_TOKEN")
+
+if not WEBHOOK_URL:
+    raise ValueError("No DISCORD_WEBHOOK_TOKEN found in environment variables!")
+
+DISCORD_WEBHOOK_URL = f"https://discord.com/api/webhooks/{DISCORD_WEBHOOK_TOKEN}"
+
 # For parsing financial statements data from financialmodelingprep api
 from urllib.request import urlopen
 import json
@@ -1468,4 +1476,28 @@ for day in day_list:
                       f.write(fig.to_html(full_html=False, include_plotlyjs='cdn')) # write the fig created above into the html fi
               except Exception as e:
                     print(e)
-    
+
+# send to discord
+file_paths = {
+    "US Market": "interested_tickers_days_-1.html",
+    "Crypto Market": "interested_tickers_crypto_days_{day}.html",
+    "HK Market": "interested_tickers_hk_days_{day}.html"
+}
+
+for market, file_path in filepaths.items():
+# Open the file in binary mode
+    with open(file_path, "rb") as f:
+        files = {
+            "file": (file_path, f, "text/html")
+        }
+        payload = {
+            "content": f"These are the current signals for the {market}. Please download the HTML file and open in your browser to view! :)",
+            "flags": 4096  # Suppress embeds
+        }
+        response = requests.post(WEBHOOK_URL, data=payload, files=files)
+
+    # Check the response
+    if response.status_code == 200:
+        print(f"Successfully sent the file for {market}!")
+    else:
+        print(f"Failed to send file for {market}! Status code: {response.status_code}, response: {response.text}")
