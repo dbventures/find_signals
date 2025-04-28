@@ -36,6 +36,7 @@ import requests
 
 # for discord
 #import kaleido
+import tabulate
 import plotly.io as pio
 
 DISCORD_WEBHOOK_TOKEN = os.getenv("DISCORD_WEBHOOK_TOKEN")
