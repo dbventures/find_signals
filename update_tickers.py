@@ -1550,14 +1550,14 @@ for market, file_path in file_paths.items():
             }
             #files[f"file{index + 1}"] = (image_file, img, "image/jpeg" if image_file.lower().endswith(".jpg") else "image/png")
         
-        # Send the image files via POST request
-        response = requests.post(DISCORD_WEBHOOK_URL2, data=payload, files=files)
+            # Send the image files via POST request
+            response = requests.post(DISCORD_WEBHOOK_URL2, data=payload, files=files)
     
-        # Check the response
-        if response.status_code == 200:
-            print(f"Successfully sent {image_file}")
-        else:
-            print(f"Failed to send {image_file}. Status code: {response.status_code}, response: {response.text}")
+            # Check the response
+            if response.status_code == 200:
+                print(f"Successfully sent {image_file}")
+            else:
+                print(f"Failed to send {image_file}. Status code: {response.status_code}, response: {response.text}")
 
     # html only
     # Open the file in binary mode
