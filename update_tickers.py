@@ -1016,7 +1016,7 @@ for day in day_list:
 
     # can consider to append df if match also, so no need to scrape again
     # loop through each symbol
-    for i, ticker in enumerate(stock_list_all): # i is mainly for printing only
+    for i, ticker in enumerate(stock_list_all[:1000]): # i is mainly for printing only
       #ticker = ticker.replace(".", "-")
       try:
         df = get_stock_price(ticker, freq = freq)
@@ -1353,6 +1353,9 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.png")
+                          with open(f"{image_folder_paths['US Market']}/{ticker}_{strategy}.txt", "a") as f:
+                              f.write(f"```{df_html.to_markdown(tablefmt="grid")}```")
+                         
                       
               except Exception as e:
                     print(e)
@@ -1412,6 +1415,8 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.png")
+                          with open(f"{image_folder_paths['HK Market']}/{ticker}_{strategy}.txt", "a") as f:
+                              f.write(f"```{df_html.to_markdown(tablefmt="grid")}```")
               except Exception as e:
                       print(e)
                     
@@ -1528,6 +1533,9 @@ for day in day_list:
                       if day == -1:
                           pio.write_image(fig, f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png", width=1200, height=600)
                           #fig.write_image(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.png")
+                          with open(f"{image_folder_paths['Crypto Market']}/{ticker}_{strategy}.txt", "a") as f:
+                              f.write(f"```{df_html.to_markdown(tablefmt="grid")}```")
+                              
               except Exception as e:
                     print(e)
 
@@ -1538,15 +1546,18 @@ for market, file_path in file_paths.items():
     image_folder_path = image_folder_paths[market]
     # List all files in the folder and filter to get only image files
     image_files = [f for f in os.listdir(image_folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-
+    
     # with images
     # Prepare the payload (message)
 
     for index, image_file in enumerate(image_files):
         image_file_path = os.path.join(image_folder_path, image_file)
         signal_name = image_file[:-4]
+        text_file_path = os.path.join(image_folder_path, image_file[:-4] + '.txt')
+        with open(text_file_path) as f:
+              markdown_table = f.read()
         payload = {
-            "content": f"Signal detected for the {market}.\n{signal_name}\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)",
+            "content": f"Signal detected for the {market}.\nFor interactive charts, please DOWNLOAD the HTML file that will be sent at the END of ALL the signal charts and open in your browser to view! :)\n\n{signal_name}\n\n{markdown_table}",
         }
         
         with open(image_file_path, "rb") as img:
