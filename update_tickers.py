@@ -1282,7 +1282,7 @@ for day in day_list:
           if '.HK' not in textLine:
               htmlLines.append('<br/>%s' % textLine) # or something even nicer
               if day == -1:
-                  us_text.append('\n%s' % textLine) # or something even nicer
+                  us_text += ('\n' + textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
@@ -1337,7 +1337,7 @@ for day in day_list:
           if '.HK' in textLine:
               htmlLines.append('<br/>%s' % textLine) # or something even nicer
               if day == -1:
-                  hk_text.append('\n%s' % textLine) # or something even nicer
+                  hk_text += ('\n' + textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
     
         f.write(updated + current_time + htmlText)
@@ -1448,7 +1448,7 @@ for day in day_list:
               if textLine.split("':")[0].split("'")[1] in crypto_list:
                 htmlLines.append('<br/>%s' % textLine) # or something even nicer
                 if day == -1:
-                    crypto_text.append('\n%s' % textLine) # or something even nicer
+                    crypto_text += ('\n' + textLine) # or something even nicer
             except:
                  htmlLines.append('<br/>Might be error%s ' % textLine) # or something even nicer
         htmlText = '\n'.join(htmlLines)
