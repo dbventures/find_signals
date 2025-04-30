@@ -102,7 +102,9 @@ for folder in image_folder_paths.values():
 # In[41]:
 
 #day_list = [-5, -6, -8, -10, -12, -15, -18, -20, -22, -25, -28, -30, -35]
-day_list = [-1, -5, -10, -15. -18]
+#day_list = [-1, -5, -10, -15, -18]
+
+day_list = [-1, -15]
 #day_list = [-1]
 #day_list = range(-1, -300, -1)
 
