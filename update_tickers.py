@@ -1,7 +1,7 @@
 # Commented out IPython magic to ensure Python compatibility.
 import pandas_ta as pta
 import yfinance as yf
-# from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
+# from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices 
 # from pypfopt import EfficientFrontier
 # from pypfopt import risk_models
 # from pypfopt import expected_returns
