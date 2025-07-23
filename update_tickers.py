@@ -1,5 +1,6 @@
 # Commented out IPython magic to ensure Python compatibility.
 import pandas_ta as pta
+import pprint
 import copy
 import numpy as np
 import pandas as pd
@@ -572,7 +573,7 @@ def process_market(market, file_template, image_folder, filter_fn,
         "document.getElementById('timestring').innerHTML += date.toString()</script>"
     )
     html_lines = []
-    for line in pd.pprint.pformat(flip_dict).splitlines():
+    for line in pprint.pformat(flip_dict).splitlines():
         t = line.split("':")[0].strip(" '")
         if filter_fn(t):
             html_lines.append(f"<br/>{line}")
