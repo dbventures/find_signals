@@ -44,6 +44,7 @@ string_1y_ago = (today - relativedelta(years=1)).strftime('%Y-%m-%d')
 
 # Ensure image folders exist
 image_folder_paths = {
+    "SNP Market":    "snp_images",
     "US Market":    "us_images",
     "HK Market":    "hk_images",
     "Crypto Market":"crypto_images",
@@ -698,11 +699,11 @@ if __name__ == "__main__":
             image_folder_paths["HK Market"], lambda t: t.endswith('.HK'),
             all_dict, flip_dict, signal_texts, day, freq, prices_entry
         )
-        process_market(
-            "SNP Market", "interested_tickers_snp_days_{day}.html",
-            None, lambda t: t in stock_list_snp,
-            all_dict, flip_dict, signal_texts, day, freq, prices_entry
-        )
+        # process_market(
+        #     "SNP Market", "interested_tickers_snp_days_{day}.html",
+        #     image_folder_paths["Crypto Market"], lambda t: t in stock_list_snp,
+        #     all_dict, flip_dict, signal_texts, day, freq, prices_entry
+        # )
         process_market(
             "Crypto Market", "interested_tickers_crypto_days_{day}.html",
             image_folder_paths["Crypto Market"], lambda t: t in crypto_list,
