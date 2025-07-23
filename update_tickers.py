@@ -686,7 +686,7 @@ if __name__ == "__main__":
             risk_reward_ratio, prices_entry
         )
 
-        signal_texts = {m: '' for m in image_folder_paths.keys()}
+        signal_texts = { m: '' for m in file_paths.keys() }
 
         process_market(
             "US Market", "interested_tickers_days_{day}.html",
