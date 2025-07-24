@@ -1,711 +1,500 @@
 # Commented out IPython magic to ensure Python compatibility.
-import pandas_ta as pta
+import os
+import json
+import pickle
 import pprint
-import copy
+import warnings
+import requests
+import datetime
 import numpy as np
 import pandas as pd
-import plotly.express as px
+import pandas_ta as pta
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-import seaborn as sns
-import mplfinance as mpf
-from mplfinance.original_flavor import candlestick_ohlc
-import matplotlib.dates as mpl_dates
-import pickle
-import os
-import requests
-import json
-import datetime
-from dateutil.relativedelta import relativedelta
-from urllib.request import urlopen
-import warnings
 import plotly.io as pio
 
+from urllib.request import urlopen
+from dateutil.relativedelta import relativedelta
+
 warnings.filterwarnings("ignore")
+
+# ─── CONFIG ────────────────────────────────────────────────────────────────────
 
 # Discord webhooks
 DISCORD_WEBHOOK_TOKEN  = os.getenv("DISCORD_WEBHOOK_TOKEN")
 DISCORD_WEBHOOK_TOKEN2 = os.getenv("DISCORD_WEBHOOK_TOKEN2")
 if not DISCORD_WEBHOOK_TOKEN or not DISCORD_WEBHOOK_TOKEN2:
-    raise ValueError("No DISCORD_WEBHOOK_TOKEN found in environment variables!")
+    raise ValueError("Missing DISCORD_WEBHOOK_TOKEN(s)")
 DISCORD_WEBHOOK_URL  = f"https://discord.com/api/webhooks/{DISCORD_WEBHOOK_TOKEN}"
 DISCORD_WEBHOOK_URL2 = f"https://discord.com/api/webhooks/{DISCORD_WEBHOOK_TOKEN2}"
 
-# For parsing financial statements data from financialmodelingprep api
-def get_jsonparsed_data(url):
-    response = urlopen(url)
-    data = response.read().decode("utf-8")
-    return json.loads(data)
-
-# Date references
-today        = datetime.datetime.today()
-string_today = today.strftime('%Y-%m-%d')
-string_1y_ago = (today - relativedelta(years=1)).strftime('%Y-%m-%d')
-
-# Ensure image folders exist
-image_folder_paths = {
-    "SNP Market":    "snp_images",
-    "US Market":    "us_images",
-    "HK Market":    "hk_images",
-    "Crypto Market":"crypto_images",
+# Markets → HTML templates
+file_paths = {
+    "US Market":     "interested_tickers_days_{day}.html",
+    "HK Market":     "interested_tickers_hk_days_{day}.html",
+    "SNP Market":    "interested_tickers_snp_days_{day}.html",
+    "Crypto Market": "interested_tickers_crypto_days_{day}.html",
 }
-def prepare_image_dirs():
-    for folder in image_folder_paths.values():
-        os.makedirs(folder, exist_ok=True)
 
-# Fetch price data from FMP, rename columns to match yfinance
+# Markets → image folders
+image_folder_paths = {
+    "US Market":     "us_images",
+    "HK Market":     "hk_images",
+    "SNP Market":    None,          # no images for SNP
+    "Crypto Market": "crypto_images",
+}
+
+# Date range for price history
+_today        = datetime.datetime.today()
+string_today  = _today.strftime('%Y-%m-%d')
+string_1y_ago = (_today - relativedelta(years=1)).strftime('%Y-%m-%d')
+
+# ─── UTILITIES ────────────────────────────────────────────────────────────────
+
+def get_jsonparsed_data(url):
+    resp = urlopen(url)
+    return json.loads(resp.read().decode())
+
+def prepare_image_dirs():
+    for d in image_folder_paths.values():
+        if d:
+            os.makedirs(d, exist_ok=True)
+
+# ─── PRICE DATA ────────────────────────────────────────────────────────────────
+
 def get_stock_price(symbol, freq='2day'):
     apiKey = os.environ['FMP_API_KEY']
-    url = (f"https://financialmodelingprep.com/api/v3/historical-price-full/"
-           f"{symbol}?from={string_1y_ago}&to={string_today}&apikey={apiKey}")
+    url = (
+        f"https://financialmodelingprep.com/api/v3/historical-price-full/"
+        f"{symbol}?from={string_1y_ago}&to={string_today}&apikey={apiKey}"
+    )
     hist = get_jsonparsed_data(url).get('historical', [])
-    df = pd.DataFrame(hist)
-    df = df.rename(columns={
+    df = pd.DataFrame(hist).rename(columns={
         'date':'Date','open':'Open','high':'High',
         'low':'Low','close':'Close','volume':'Volume'
     })
     df['Date'] = pd.to_datetime(df['Date'])
-    df = df.sort_values('Date').set_index('Date')
+    df = df.set_index('Date').sort_index()
+
     if freq == '2day':
         df = df.resample('2D').agg({
             'Open':'first','High':'max','Low':'min',
             'Close':'last','Volume':'sum'
-        }).dropna(how='any')
+        }).dropna()
     elif freq == 'week':
         df = df.resample('1W').agg({
             'Open':'first','High':'max','Low':'min',
             'Close':'last','Volume':'sum'
-        }).dropna(how='any')
-    # Indicators
-    df['ATR20']         = pta.atr(df['High'], df['Low'], df['Close'],
-                                  window=20, fillna=False, mamode='ema')
-    df['SMA20']         = df['Close'].rolling(20).mean()
-    df['SMA50']         = df['Close'].rolling(50).mean()
-    df['SMA100']        = df['Close'].rolling(100).mean()
-    df['Ave Volume 20'] = df['Volume'].rolling(20).mean()
+        }).dropna()
+
+    df['ATR20']         = pta.atr(df.High, df.Low, df.Close, window=20, mamode='ema')
+    df['SMA20']         = df.Close.rolling(20).mean()
+    df['SMA50']         = df.Close.rolling(50).mean()
+    df['SMA100']        = df.Close.rolling(100).mean()
+    df['Ave Volume 20'] = df.Volume.rolling(20).mean()
+
     return df
 
-# ==== Signal‐finding functions (unchanged logic) ====
-
-def is_support(df,i):
-    cond1 = df['Low'][i] < df['Low'][i-1]
-    cond2 = df['Low'][i] < df['Low'][i+1]
-    cond3 = df['Low'][i+1] < df['Low'][i+2]
-    cond4 = df['Low'][i-1] < df['Low'][i-2]
-    cond_3bar_1 = (df['Low'][i-1] - df['Low'][i]) > 0.8*df['ATR20'][i]
-    cond_3bar_2 = (df['Low'][i+1] - df['Low'][i]) > 0.8*df['ATR20'][i]
-    return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
-
-def is_resistance(df,i):
-    cond1 = df['High'][i] > df['High'][i-1]
-    cond2 = df['High'][i] > df['High'][i+1]
-    cond3 = df['High'][i+1] > df['High'][i+2]
-    cond4 = df['High'][i-1] > df['High'][i-2]
-    cond_3bar_1 = (df['High'][i] - df['High'][i-1]) > 0.6*df['ATR20'][i]
-    cond_3bar_2 = (df['High'][i] - df['High'][i+1]) > 0.6*df['ATR20'][i]
-    return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (cond_3bar_1 or cond_3bar_2))
-
-def is_support_harder(df,i):
-    cond1 = df['Low'][i] < df['Low'][i-1]
-    cond2 = df['Low'][i] < df['Low'][i+1]
-    cond3 = df['Low'][i+1] < df['Low'][i+2]
-    cond4 = df['Low'][i-1] < df['Low'][i-2]
-    return (cond1 and cond2 and cond3 and cond4)
-
-def is_resistance_harder(df,i):
-    cond1 = df['High'][i] > df['High'][i-1]
-    cond2 = df['High'][i] > df['High'][i+1]
-    cond3 = df['High'][i+1] > df['High'][i+2]
-    cond4 = df['High'][i-1] > df['High'][i-2]
-    return (cond1 and cond2 and cond3 and cond4)
+# ─── SIGNAL FUNCTIONS ──────────────────────────────────────────────────────────
 
 def is_support_harderv2(df,i):
-    cond1 = df['Low'][i] < df['Low'][i-1]
-    cond2 = df['Low'][i] < df['Low'][i+1]
-    cond3 = df['Low'][i+1] < df['Low'][i+2]
-    cond4 = df['Low'][i-1] < df['Low'][i-2]
-    cond_3bar_1 = (df['Low'][i-1] - df['Low'][i]) > 0.5*df['ATR20'][i]
-    cond_3bar_2 = (df['Low'][i+1] - df['Low'][i]) > 0.5*df['ATR20'][i]
-    cond_3bar_3 = (df['Low'][i-1] - df['Low'][i]) > 0.8*df['ATR20'][i]
-    cond_3bar_4 = (df['Low'][i+1] - df['Low'][i]) > 0.8*df['ATR20'][i]
-    return (cond1 and cond2 and cond3 and cond4) or (
-        cond1 and cond2 and (cond_3bar_1 and cond_3bar_2) and (cond_3bar_3 or cond_3bar_4)
-    )
+    cond1 = df.Low[i] < df.Low[i-1]
+    cond2 = df.Low[i] < df.Low[i+1]
+    cond3 = df.Low[i+1] < df.Low[i+2]
+    cond4 = df.Low[i-1] < df.Low[i-2]
+    c1 = (df.Low[i-1] - df.Low[i]) > 0.5*df.ATR20[i]
+    c2 = (df.Low[i+1] - df.Low[i]) > 0.5*df.ATR20[i]
+    c3 = (df.Low[i-1] - df.Low[i]) > 0.8*df.ATR20[i]
+    c4 = (df.Low[i+1] - df.Low[i]) > 0.8*df.ATR20[i]
+    return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (c1 and c2) and (c3 or c4))
 
 def is_resistance_harderv2(df,i):
-    cond1 = df['High'][i] > df['High'][i-1]
-    cond2 = df['High'][i] > df['High'][i+1]
-    cond3 = df['High'][i+1] > df['High'][i+2]
-    cond4 = df['High'][i-1] > df['High'][i-2]
-    cond_3bar_1 = (df['High'][i] - df['High'][i-1]) > 0.5*df['ATR20'][i]
-    cond_3bar_2 = (df['High'][i] - df['High'][i+1]) > 0.5*df['ATR20'][i]
-    cond_3bar_3 = (df['High'][i] - df['High'][i-1]) > 0.8*df['ATR20'][i]
-    cond_3bar_4 = (df['High'][i] - df['High'][i+1]) > 0.8*df['ATR20'][i]
-    return (cond1 and cond2 and cond3 and cond4) or (
-        cond1 and cond2 and (cond_3bar_1 and cond_3bar_2) and (cond_3bar_3 or cond_3bar_4)
-    )
-
-def is_far_from_level(value, levels, df):
-    ave = np.mean(df['High'] - df['Low'])
-    return np.sum([abs(value - level) < ave for _, level in levels]) == 0
-
-def remove_previous(value, levels, low_or_high):
-    to_remove = []
-    for level in levels:
-        if low_or_high == 'low' and value <= level[1]:
-            to_remove.append(level)
-        elif low_or_high == 'high' and value >= level[1]:
-            to_remove.append(level)
-    for lvl in to_remove:
-        levels.remove(lvl)
+    cond1 = df.High[i] > df.High[i-1]
+    cond2 = df.High[i] > df.High[i+1]
+    cond3 = df.High[i+1] > df.High[i+2]
+    cond4 = df.High[i-1] > df.High[i-2]
+    c1 = (df.High[i] - df.High[i-1]) > 0.5*df.ATR20[i]
+    c2 = (df.High[i] - df.High[i+1]) > 0.5*df.ATR20[i]
+    c3 = (df.High[i] - df.High[i-1]) > 0.8*df.ATR20[i]
+    c4 = (df.High[i] - df.High[i+1]) > 0.8*df.ATR20[i]
+    return (cond1 and cond2 and cond3 and cond4) or (cond1 and cond2 and (c1 and c2) and (c3 or c4))
 
 def find_levels(df, max_breach):
-    levels_low = []
-    levels_high = []
-    for i in range(2, df.shape[0] - 12):
-        if is_support_harderv2(df, i):
-            low = df['Low'][i]
-            if df.loc[df.index[i]:df.index[max_breach]]['Low'].min() >= low:
-                levels_low.append((df.index[i], low))
-        elif is_resistance_harderv2(df, i):
-            high = df['High'][i]
-            if df.loc[df.index[i]:df.index[max_breach]]['High'].max() <= high:
-                levels_high.append((df.index[i], high))
-    return levels_low, levels_high
+    lows, highs = [], []
+    for i in range(2, len(df)-12):
+        if is_support_harderv2(df,i):
+            val = df.Low[i]
+            if df.Low.iloc[i:max_breach].min() >= val:
+                lows.append((df.index[i], val))
+        elif is_resistance_harderv2(df,i):
+            val = df.High[i]
+            if df.High.iloc[i:max_breach].max() <= val:
+                highs.append((df.index[i], val))
+    return lows, highs
 
-def find_recent_levels(df, i, j):
-    recent_lows  = []
-    recent_highs = []
-    for k in range(i, j-1, 1):
-        if is_support_harderv2(df, k):
-            low = df['Low'][k]
-            if df.loc[df.index[i]:df.index[j]]['Low'].min() >= low:
-                recent_lows.append((k, low))
-        elif is_resistance_harderv2(df, k):
-            high = df['High'][k]
-            if df.loc[df.index[i]:df.index[j]]['High'].max() <= high:
-                recent_highs.append((k, high))
-    return recent_lows, recent_highs
+def find_recent_levels(df, start, end):
+    lows, highs = [], []
+    for k in range(start, end):
+        if is_support_harderv2(df,k):
+            val = df.Low[k]
+            if df.Low.iloc[start:end+1].min() >= val:
+                lows.append((k, val))
+        elif is_resistance_harderv2(df,k):
+            val = df.High[k]
+            if df.High.iloc[start:end+1].max() <= val:
+                highs.append((k, val))
+    return lows, highs
 
-def exe_bull(df, i):
-    pin     = ((df['Close'][i] - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3) \
-           and ((df['Open'][i]  - df['Low'][i])/(df['High'][i] - df['Low'][i]) >= 2/3)
-    markup  = (df['Close'][i] > df['Open'][i]) and ((df['Close'][i]-df['Open'][i])/(df['High'][i]-df['Low'][i]) >= 2/3)
-    icecream= ((df['Close'][i]-df['Low'][i])/(df['High'][i]-df['Low'][i]) >= 2/3) \
-           and ((df['Close'][i]-df['Open'][i])/(df['High'][i]-df['Low'][i]) >= 1/2)
+def exe_bull(df,i):
+    pin      = ((df.Close[i]-df.Low[i])/(df.High[i]-df.Low[i])>=2/3) and ((df.Open[i]-df.Low[i])/(df.High[i]-df.Low[i])>=2/3)
+    markup   = (df.Close[i]>df.Open[i]) and ((df.Close[i]-df.Open[i])/(df.High[i]-df.Low[i])>=2/3)
+    icecream = ((df.Close[i]-df.Low[i])/(df.High[i]-df.Low[i])>=2/3) and ((df.Close[i]-df.Open[i])/(df.High[i]-df.Low[i])>=1/2)
     return pin or markup or icecream
 
-def exe_bear(df, i):
-    pin     = ((df['Close'][i]-df['Low'][i])/(df['High'][i]-df['Low'][i]) <= 1/3) \
-           and ((df['Open'][i]-df['Low'][i])/(df['High'][i]-df['Low'][i]) <= 1/3)
-    markup  = (df['Close'][i] < df['Open'][i]) and ((df['Open'][i]-df['Close'][i])/(df['High'][i]-df['Low'][i]) >= 2/3)
-    icecream= ((df['Close'][i]-df['Low'][i])/(df['High'][i]-df['Low'][i]) <= 1/3) \
-           and ((df['Open'][i]-df['Close'][i])/(df['High'][i]-df['Low'][i]) >= 1/2)
+def exe_bear(df,i):
+    pin      = ((df.Close[i]-df.Low[i])/(df.High[i]-df.Low[i])<=1/3) and ((df.Open[i]-df.Low[i])/(df.High[i]-df.Low[i])<=1/3)
+    markup   = (df.Close[i]<df.Open[i]) and ((df.Open[i]-df.Close[i])/(df.High[i]-df.Low[i])>=2/3)
+    icecream = ((df.Close[i]-df.Low[i])/(df.High[i]-df.Low[i])<=1/3) and ((df.Open[i]-df.Close[i])/(df.High[i]-df.Low[i])>=1/2)
     return pin or markup or icecream
 
-def bullish_dr1(df, i, drop_days=3):
-    exe   = exe_bull(df, i)
-    price_cond = df['Close'][i] > 2
-    vol   = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
-    j     = drop_days - 3
-    if i == -1:
-        swing_1 = (df['Low'][i] < df['Low'][i-3:i].min()) \
-               and ((df['High'][i-3-j:].max() - df['Low'][i-3-j:].min()) >= 5*df['ATR20'][i])
-        swing_2 = (df['Low'][i-1] < df['Low'][i]) \
-               and (df['Low'][i-1] < df['Low'][i-4:i-1].min()) \
-               and ((df['High'][i-4-j:i].max() - df['Low'][i-4-j:i].min()) >= 5*df['ATR20'][i])
-        swing_3 = (df['Low'][i-2] < df['Low'][i-1:].min()) \
-               and (df['Low'][i-2] < df['Low'][i-5:i-2].min()) \
-               and ((df['High'][i-5-j:i-1].max() - df['Low'][i-5-j:i-1].min()) >= 5*df['ATR20'][i])
-        swing_4 = (df['Low'][i-3] < df['Low'][i-2:].min()) \
-               and (df['Low'][i-3] < df['Low'][i-6:i-3].min()) \
-               and ((df['High'][i-6-j:i-2].max() - df['Low'][i-6-j:i-2].min()) >= 5*df['ATR20'][i])
+def bullish_dr1(df,i,drop_days=3):
+    exe = exe_bull(df,i)
+    cond_price = df.Close[i]>2
+    cond_vol = (df['Ave Volume 20'][i]>100000) and (df.Volume[i]>100000)
+    j = drop_days-3
+    if i==-1:
+        s1 = (df.Low[i]<df.Low[i-3:i].min()) and ((df.High[i-3-j:].max()-df.Low[i-3-j:].min())>=5*df.ATR20[i])
+        s2 = (df.Low[i-1]<df.Low[i]) and (df.Low[i-1]<df.Low[i-4:i-1].min()) and ((df.High[i-4-j:i].max()-df.Low[i-4-j:i].min())>=5*df.ATR20[i])
+        s3 = (df.Low[i-2]<df.Low[i-1:].min()) and (df.Low[i-2]<df.Low[i-5:i-2].min()) and ((df.High[i-5-j:i-1].max()-df.Low[i-5-j:i-1].min())>=5*df.ATR20[i])
+        s4 = (df.Low[i-3]<df.Low[i-2:].min()) and (df.Low[i-3]<df.Low[i-6:i-3].min()) and ((df.High[i-6-j:i-2].max()-df.Low[i-6-j:i-2].min())>=5*df.ATR20[i])
     else:
-        swing_1 = (df['Low'][i] < df['Low'][i-3:i-1+1].min()) \
-               and ((df['High'][i-5:i+1].max() - df['Low'][i-5:i+1].min()) >= 4*df['ATR20'][i])
-        swing_2 = (df['Low'][i-1] < df['Low'][i]) \
-               and (df['Low'][i-1] < df['Low'][i-4:i-1].min()) \
-               and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= 5*df['ATR20'][i])
-        swing_3 = (df['Low'][i-2] < df['Low'][i-1:i+1].min()) \
-               and (df['Low'][i-2] < df['Low'][i-5:i-2].min()) \
-               and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= 5*df['ATR20'][i])
-        swing_4 = (df['Low'][i-3] < df['Low'][i-2:i+1].min()) \
-               and (df['Low'][i-3] < df['Low'][i-6:i-3].min()) \
-               and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) >= 5*df['ATR20'][i])
-    which_swing = None
-    for idx, s in enumerate((swing_1, swing_2, swing_3, swing_4), start=1):
-        if s:
-            which_swing = idx
-    return (exe and price_cond and vol and (swing_1 or swing_2 or swing_3 or swing_4)), which_swing
+        s1 = (df.Low[i]<df.Low[i-3:i+1].min()) and ((df.High[i-5:i+1].max()-df.Low[i-5:i+1].min())>=4*df.ATR20[i])
+        s2 = (df.Low[i-1]<df.Low[i]) and (df.Low[i-1]<df.Low[i-4:i-1].min()) and ((df.High[i-4-j:i-1].max()-df.Low[i-4-j:i-1].min())>=5*df.ATR20[i])
+        s3 = (df.Low[i-2]<df.Low[i-1:i+1].min()) and (df.Low[i-2]<df.Low[i-5:i-2].min()) and ((df.High[i-5-j:i-2].max()-df.Low[i-5-j:i-2].min())>=5*df.ATR20[i])
+        s4 = (df.Low[i-3]<df.Low[i-2:i+1].min()) and (df.Low[i-3]<df.Low[i-6:i-3].min()) and ((df.High[i-6-j:i-3].max()-df.Low[i-6-j:i-3].min())>=5*df.ATR20[i])
+    which = next((idx for idx,(cond) in enumerate((s1,s2,s3,s4),1) if cond), None)
+    return (exe and cond_price and cond_vol and any((s1,s2,s3,s4))), which
 
-def bearish_ur1(df, i, rise_days=3):
-    exe   = exe_bear(df, i)
-    price_cond = df['Close'][i] > 2
-    vol   = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
-    j     = rise_days - 3
-    if i == -1:
-        swing_1 = (df['High'][i] > df['High'][i-3:i].max()) \
-               and ((df['High'][i-3-j:].max() - df['Low'][i-3-j:].min()) >= 4*df['ATR20'][i])
-        swing_2 = (df['High'][i-1] > df['High'][i]) \
-               and (df['High'][i-1] > df['High'][i-4:i-1].max()) \
-               and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= 5*df['ATR20'][i])
-        swing_3 = (df['High'][i-2] > df['High'][i-1:].max()) \
-               and (df['High'][i-2] > df['High'][i-5:i-2].max()) \
-               and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= 5*df['ATR20'][i])
-        swing_4 = (df['High'][i-3] > df['High'][i-2:].max()) \
-               and (df['High'][i-3] > df['High'][i-6:i-3].max()) \
-               and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) > 5*df['ATR20'][i])
+def bearish_ur1(df,i,rise_days=3):
+    exe = exe_bear(df,i)
+    cond_price = df.Close[i]>2
+    cond_vol = (df['Ave Volume 20'][i]>100000) and (df.Volume[i]>100000)
+    j = rise_days-3
+    if i==-1:
+        s1 = (df.High[i]>df.High[i-3:i].max()) and ((df.High[i-3-j:].max()-df.Low[i-3-j:].min())>=4*df.ATR20[i])
+        s2 = (df.High[i-1]>df.High[i]) and (df.High[i-1]>df.High[i-4:i-1].max()) and ((df.High[i-4-j:i-1].max()-df.Low[i-4-j:i-1].min())>=5*df.ATR20[i])
+        s3 = (df.High[i-2]>df.High[i-1:].max()) and (df.High[i-2]>df.High[i-5:i-2].max()) and ((df.High[i-5-j:i-2].max()-df.Low[i-5-j:i-2].min())>=5*df.ATR20[i])
+        s4 = (df.High[i-3]>df.High[i-2:].max()) and (df.High[i-3]>df.High[i-6:i-3].max()) and ((df.High[i-6-j:i-3].max()-df.Low[i-6-j:i-3].min())>5*df.ATR20[i])
     else:
-        swing_1 = (df['High'][i] > df['High'][i-4:i-1+1].max()) \
-               and ((df['High'][i-6:i+1].max() - df['Low'][i-6:i+1].min()) >= 4*df['ATR20'][i])
-        swing_2 = (df['High'][i-1] > df['High'][i]) \
-               and (df['High'][i-1] > df['High'][i-4:i-1].max()) \
-               and ((df['High'][i-4-j:i-1].max() - df['Low'][i-4-j:i-1].min()) >= 5*df['ATR20'][i])
-        swing_3 = (df['High'][i-2] > df['High'][i-1:i+1].max()) \
-               and (df['High'][i-2] > df['High'][i-5:i-2].max()) \
-               and ((df['High'][i-5-j:i-2].max() - df['Low'][i-5-j:i-2].min()) >= 5*df['ATR20'][i])
-        swing_4 = (df['High'][i-3] > df['High'][i-2:i+1].max()) \
-               and (df['High'][i-3] > df['High'][i-6:i-3].max()) \
-               and ((df['High'][i-6-j:i-3].max() - df['Low'][i-6-j:i-3].min()) > 5*df['ATR20'][i])
-    which_swing = None
-    for idx, s in enumerate((swing_1, swing_2, swing_3, swing_4), start=1):
-        if s:
-            which_swing = idx
-    return (exe and price_cond and vol and (swing_1 or swing_2 or swing_3 or swing_4)), which_swing
+        s1 = (df.High[i]>df.High[i-4:i+1].max()) and ((df.High[i-6:i+1].max()-df.Low[i-6:i+1].min())>=4*df.ATR20[i])
+        s2 = (df.High[i-1]>df.High[i]) and (df.High[i-1]>df.High[i-4:i-1].max()) and ((df.High[i-4-j:i-1].max()-df.Low[i-4-j:i-1].min())>=5*df.ATR20[i])
+        s3 = (df.High[i-2]>df.High[i-1:i+1].max()) and (df.High[i-2]>df.High[i-5:i-2].max()) and ((df.High[i-5-j:i-2].max()-df.Low[i-5-j:i-2].min())>=5*df.ATR20[i])
+        s4 = (df.High[i-3]>df.High[i-2:i+1].max()) and (df.High[i-3]>df.High[i-6:i-3].max()) and ((df.High[i-6-j:i-3].max()-df.Low[i-6-j:i-3].min())>5*df.ATR20[i])
+    which = next((idx for idx,(cond) in enumerate((s1,s2,s3,s4),1) if cond), None)
+    return (exe and cond_price and cond_vol and any((s1,s2,s3,s4))), which
 
-def bearish_fs(df, i):
-    exe   = exe_bear(df, i)
-    price_cond = df['Close'][i] > 2
-    vol   = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
-    fs_3_bar = (((df['Low'][i-2] <= df['Low'][i-1]) and (df['Low'][i-2] <= df['Low'][i]))
-              and (df['High'][i-2] >= df['High'][i-1]) and (df['High'][i] > df['High'][i-2])
-              and (df['Close'][i] <= df['High'][i-2]))
-    fs_4_bar = (((df['Low'][i-3] <= df['Low'][i-2]) and (df['Low'][i-3] <= df['Low'][i-1]) and (df['Low'][i-3] <= df['Low'][i]))
-                and (df['High'][i-3] >= df['High'][i-2]) and ((df['High'][i] > df['High'][i-3]) or (df['High'][i-1] > df['High'][i-3]))
-                and (df['Close'][i] <= df['High'][i-3]))
-    fs_5_bar = (((df['Low'][i-4] <= df['Low'][i-3]) and (df['Low'][i-4] <= df['Low'][i-2]) and (df['Low'][i-4] <= df['Low'][i-1]) and (df['Low'][i-4] <= df['Low'][i]))
-                and (df['High'][i-4] >= df['High'][i-3]) and ((df['High'][i] > df['High'][i-4]) or (df['High'][i-1] > df['High'][i-4]) or (df['High'][i-2] > df['High'][i-4]))
-                and (df['Close'][i] <= df['High'][i-4]))
-    which_bar = None
-    for idx, cond in enumerate((fs_3_bar, fs_4_bar, fs_5_bar), start=3):
-        if cond:
-            which_bar = idx
-    return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar)), which_bar
+def bearish_fs(df,i):
+    exe = exe_bear(df,i)
+    cond_price = df.Close[i]>2
+    cond_vol = (df['Ave Volume 20'][i]>100000) and (df.Volume[i]>100000)
+    fs3 = (((df.Low[i-2]<=df.Low[i-1]) and (df.Low[i-2]<=df.Low[i])) and 
+           (df.High[i-2]>=df.High[i-1]) and (df.High[i]>df.High[i-2]) and 
+           (df.Close[i]<=df.High[i-2]))
+    fs4 = (((df.Low[i-3]<=df.Low[i-2]) and (df.Low[i-3]<=df.Low[i-1]) and (df.Low[i-3]<=df.Low[i])) and 
+           (df.High[i-3]>=df.High[i-2]) and ((df.High[i]>df.High[i-3]) or (df.High[i-1]>df.High[i-3])) and 
+           (df.Close[i]<=df.High[i-3]))
+    fs5 = (((df.Low[i-4]<=df.Low[i-3]) and (df.Low[i-4]<=df.Low[i-2]) and (df.Low[i-4]<=df.Low[i-1]) and (df.Low[i-4]<=df.Low[i])) and 
+           (df.High[i-4]>=df.High[i-3]) and ((df.High[i]>df.High[i-4]) or (df.High[i-1]>df.High[i-4]) or (df.High[i-2]>df.High[i-4])) and 
+           (df.Close[i]<=df.High[i-4]))
+    which = next((b for b,cond in zip((3,4,5),(fs3,fs4,fs5)) if cond), None)
+    return (exe and cond_price and cond_vol and any((fs3,fs4,fs5))), which
 
-def bullish_fs(df, i):
-    exe   = exe_bull(df, i)
-    price_cond = df['Close'][i] > 2
-    vol   = (df['Ave Volume 20'][i] > 100000) and (df['Volume'][i] > 100000)
-    fs_3_bar = ((df['High'][i-2] >= df['High'][i-1]) and (df['High'][i-2] >= df['High'][i])) \
-            and (df['Low'][i-2] <= df['Low'][i-1]) and (df['Low'][i] < df['Low'][i-2]) \
-            and (df['Close'][i] >= df['Low'][i-2])
-    fs_4_bar = ((df['High'][i-3] >= df['High'][i-2]) and (df['High'][i-3] >= df['High'][i-1]) and (df['High'][i-3] >= df['High'][i])) \
-            and (df['Low'][i-3] <= df['Low'][i-2]) \
-            and ((df['Low'][i] < df['Low'][i-3]) or (df['Low'][i-1] < df['Low'][i-3])) \
-            and (df['Close'][i] >= df['Low'][i-3])
-    fs_5_bar = ((df['High'][i-4] >= df['High'][i-3]) and (df['High'][i-4] >= df['High'][i-2]) and (df['High'][i-4] >= df['High'][i-1]) and (df['High'][i-4] >= df['High'][i])) \
-            and (df['Low'][i-4] <= df['Low'][i-3]) \
-            and ((df['Low'][i] < df['Low'][i-4]) or (df['Low'][i-1] < df['Low'][i-4]) or (df['Low'][i-2] < df['Low'][i-4])) \
-            and (df['Close'][i] >= df['Low'][i-4])
-    which_bar = None
-    for idx, cond in enumerate((fs_3_bar, fs_4_bar, fs_5_bar), start=3):
-        if cond:
-            which_bar = idx
-    return (exe and price_cond and vol and (fs_3_bar or fs_4_bar or fs_5_bar)), which_bar
+def bullish_fs(df,i):
+    exe = exe_bull(df,i)
+    cond_price = df.Close[i]>2
+    cond_vol = (df['Ave Volume 20'][i]>100000) and (df.Volume[i]>100000)
+    fs3 = ((df.High[i-2]>=df.High[i-1]) and (df.High[i-2]>=df.High[i]) and 
+           (df.Low[i-2]<=df.Low[i-1]) and (df.Low[i]<df.Low[i-2]) and 
+           (df.Close[i]>=df.Low[i-2]))
+    fs4 = ((df.High[i-3]>=df.High[i-2]) and (df.High[i-3]>=df.High[i-1]) and (df.High[i-3]>=df.High[i]) and 
+           (df.Low[i-3]<=df.Low[i-2]) and ((df.Low[i]<df.Low[i-3]) or (df.Low[i-1]<df.Low[i-3])) and 
+           (df.Close[i]>=df.Low[i-3]))
+    fs5 = ((df.High[i-4]>=df.High[i-3]) and (df.High[i-4]>=df.High[i-2]) and (df.High[i-4]>=df.High[i-1]) and (df.High[i-4]>=df.High[i]) and 
+           (df.Low[i-4]<=df.Low[i-3]) and ((df.Low[i]<df.Low[i-4]) or (df.Low[i-1]<df.Low[i-4]) or (df.Low[i-2]<df.Low[i-4])) and 
+           (df.Close[i]>=df.Low[i-4]))
+    which = next((b for b,cond in zip((3,4,5),(fs3,fs4,fs5)) if cond), None)
+    return (exe and cond_price and cond_vol and any((fs3,fs4,fs5))), which
 
 def test_force_top(df, day, levels):
     for lvl in levels:
-        not_too_late = df['High'][day+1-5] < lvl[1]
-        went_above   = df['High'][day+1-4:day+1].max() > lvl[1] if day != -1 else df['High'][day+1-4:].max() > lvl[1]
-        close_below  = df['Close'][day] <= lvl[1]
-        if not_too_late and went_above and close_below:
+        ntl = df.High.iloc[day+1-5] < lvl[1]
+        wa  = df.High.iloc[day+1-4:day+1].max() > lvl[1] if day!=-1 else df.High.iloc[day+1-4:].max()>lvl[1]
+        cb  = df.Close.iloc[day] <= lvl[1]
+        if ntl and wa and cb:
             return True, lvl
     return False, False
 
 def test_force_bottom(df, day, levels):
     for lvl in levels:
-        not_too_late = df['Low'][day+1-5] > lvl[1]
-        went_below   = df['Low'][day+1-4:day+1].min() < lvl[1] if day != -1 else df['Low'][day+1-4:].min() < lvl[1]
-        close_above  = df['Close'][day] >= lvl[1]
-        if not_too_late and went_below and close_above:
+        ntl = df.Low.iloc[day+1-5] > lvl[1]
+        wb  = df.Low.iloc[day+1-4:day+1].min() < lvl[1] if day!=-1 else df.Low.iloc[day+1-4:].min()<lvl[1]
+        ca  = df.Close.iloc[day] >= lvl[1]
+        if ntl and wb and ca:
             return True, lvl
     return False, False
 
-def check_50_steepness_top(df, swing_bar, level, rise_days=3):
-    start_of_swing = -swing_bar - 3 - rise_days
-    return (level[1] - df['Low'][start_of_swing:-swing_bar].min()) > 0.5 * (
-        level[1] - df['Low'].loc[:df.index[start_of_swing]].min()
-    )
+def test_sma_above(df,i,j):
+    exe = exe_bull(df,i)
+    pc  = df.Close[i]>2
+    t1  = df.SMA20[i]>df.SMA50[i]
+    t2  = df.SMA50[i]>df.SMA100[i]
+    bb  = 0.1*df.ATR20[i]
+    eb  = 1*df.ATR20[i]
+    flow = (df.High[i]>df.SMA50[i]) or (abs(df.High[i]-df.SMA50[i])<bb)
+    near = False
+    for k in range(i,j,-1):
+        near = any([
+            (df.High[k]>df.SMA20[k] and df.Low[k]<df.SMA20[k]),
+            abs(df.High[k]-df.SMA20[k])<bb,
+            abs(df.Low[k]-df.SMA20[k])<bb,
+            (df.High[k]>df.SMA50[k] and df.Low[k]<df.SMA50[k]),
+            abs(df.High[k]-df.SMA50[k])<bb,
+            abs(df.Low[k]-df.SMA50[k])<bb
+        ])
+        if near: break
+    return exe and pc and t1 and t2 and flow and (abs(df.High[i]-df.SMA20[i])<eb or abs(df.High[i]-df.SMA50[i])<eb) and near
 
-def check_50_steepness_bottom(df, swing_bar, level, drop_days=3):
-    start_of_swing = -swing_bar - 3 - drop_days
-    return (df['High'][start_of_swing:-swing_bar].max() - level[1]) > 0.5 * (
-        df['High'].loc[:df.index[start_of_swing]].max() - level[1]
-    )
+def test_sma_below(df,i,j):
+    exe = exe_bear(df,i)
+    pc  = df.Close[i]>2
+    t1  = df.SMA20[i]<df.SMA50[i]
+    t2  = df.SMA50[i]<df.SMA100[i]
+    bb  = 0.1*df.ATR20[i]
+    eb  = 1*df.ATR20[i]
+    flow = (df.Low[i]<df.SMA50[i]) or (abs(df.Low[i]-df.SMA50[i])<bb)
+    near = False
+    for k in range(i,j,-1):
+        near = any([
+            (df.High[k]>df.SMA20[k] and df.Low[k]<df.SMA20[k]),
+            abs(df.High[k]-df.SMA20[k])<bb,
+            abs(df.Low[k]-df.SMA20[k])<bb,
+            (df.High[k]>df.SMA50[k] and df.Low[k]<df.SMA50[k]),
+            abs(df.High[k]-df.SMA50[k])<bb,
+            abs(df.Low[k]-df.SMA50[k])<bb
+        ])
+        if near: break
+    return exe and pc and t1 and t2 and flow and (abs(df.Low[i]-df.SMA20[i])<eb or abs(df.Low[i]-df.SMA50[i])<eb) and near
 
-def get_enter_prices(df, day, ticker, direction='Long', risk=300,
-                     currency='USD', ratio=2, enter_override=None, stop_loss_buffer=0.02):
-    if ticker.endswith('.HK'):
-        currency = 'HKD'
-    if currency == 'USD':
-        risk *= 0.75
-    elif currency == 'HKD':
-        risk *= 5.82
-    more_than_atr = False
-    price_dict = {}
-    if direction == 'Long':
-        enter_dict = {
-            '0.25': ((df['High'][day] - df['Low'][day]) * 0.75) + df['Low'][day],
-            '0.5':  ((df['High'][day] - df['Low'][day]) * 0.5)  + df['Low'][day],
-            'close': df['Close'][day]
-        }
-    else:
-        enter_dict = {
-            '0.25': ((df['High'][day] - df['Low'][day]) * 0.25) + df['Low'][day],
-            '0.5':  ((df['High'][day] - df['Low'][day]) * 0.5)  + df['Low'][day],
-            'close': df['Close'][day]
-        }
-    if enter_override:
-        enter_dict['override'] = enter_override
-    for key, enter in enter_dict.items():
-        if direction == 'Long':
-            sl = df['Low'][day+1-5:day+1].min() - stop_loss_buffer if day != -1 else df['Low'][day+1-5:].min() - stop_loss_buffer
-            tp = (enter - sl)*ratio + enter
-            n  = risk/(enter - sl)
-            if (enter - sl) > df['ATR20'][-1]:
-                more_than_atr = True
-        else:
-            sl = df['High'][day+1-5:day+1].max() + stop_loss_buffer if day != -1 else df['High'][day+1-5:].max() + stop_loss_buffer
-            tp = enter - (sl - enter)*ratio
-            n  = risk/(sl - enter)
-            if (sl - enter) > df['ATR20'][-1]:
-                more_than_atr = True
-        price_dict[key] = {
-            'enter': enter,
-            'take_profit': tp,
-            'stop_loss': sl,
-            'n_shares': n,
-            'more_than_atr': more_than_atr
-        }
-    return price_dict
+def bullish_uc1(df,i,sma_start=-1,sma_end=-6,rs=-6,re=-26):
+    if not test_sma_above(df,sma_start,sma_end): return False,None,None
+    lows,highs = find_recent_levels(df,rs,re)
+    if not lows or not highs: return False,None,None
+    li,lv = lows[0]; hi,hv = highs[0]
+    if hi-li>=3 and hv-lv>1.5*df.ATR20[i] and df.Close[i]>=lv:
+        for d in range(5):
+            if (df.Low[i-d]<lv) and (df.Low.iloc[hi:i-d].min()>lv):
+                return True,(df.index[li],lv),(df.index[hi],hv)
+    return False,None,None
 
-def test_sma_above(df, i, j):
-    exe          = exe_bull(df, i)
-    price_cond   = df['Close'][i] > 2
-    trend_cond   = df['SMA20'][i] > df['SMA50'][i]
-    trend_cond2  = df['SMA50'][i] > df['SMA100'][i]
-    bars_buffer  = 0.1 * df['ATR20'][i]
-    exe_buffer   = 1 * df['ATR20'][i]
-    exe_with_flow = (df['High'][i] > df['SMA50'][i]) or (abs(df['High'][i] - df['SMA50'][i]) < bars_buffer)
-    exe_not_far   = (abs(df['High'][i] - df['SMA20'][i]) < exe_buffer) or (abs(df['High'][i] - df['SMA50'][i]) < exe_buffer)
-    near_ma = False
-    for k in range(i, j-1, -1):
-        near_ma = (
-            ((df['High'][k] > df['SMA20'][k]) and (df['Low'][k] < df['SMA20'][k])) or
-            (abs(df['High'][k] - df['SMA20'][k]) < bars_buffer) or
-            (abs(df['Low'][k] - df['SMA20'][k]) < bars_buffer) or
-            ((df['High'][k] > df['SMA50'][k]) and (df['Low'][k] < df['SMA50'][k])) or
-            (abs(df['High'][k] - df['SMA50'][k]) < bars_buffer) or
-            (abs(df['Low'][k] - df['SMA50'][k]) < bars_buffer)
-        )
-        if near_ma:
-            break
-    return exe and price_cond and trend_cond and trend_cond2 and exe_with_flow and exe_not_far and near_ma
+def bearish_dc1(df,i,sma_start=-1,sma_end=-6,rs=-6,re=-26):
+    if not test_sma_below(df,sma_start,sma_end): return False,None,None
+    lows,highs = find_recent_levels(df,rs,re)
+    if not lows or not highs: return False,None,None
+    li,lv = lows[0]; hi,hv = highs[0]
+    if hi<li and hv-lv>1.5*df.ATR20[i] and df.Close[i]<=hv:
+        for d in range(5):
+            if df.High[i-d]>hv and df.High.iloc[li:i-d].max()<hv:
+                return True,(df.index[li],lv),(df.index[hi],hv)
+    return False,None,None
 
-def test_sma_below(df, i, j):
-    exe          = exe_bear(df, i)
-    price_cond   = df['Close'][i] > 2
-    trend_cond   = df['SMA20'][i] < df['SMA50'][i]
-    trend_cond2  = df['SMA50'][i] < df['SMA100'][i]
-    bars_buffer  = 0.1 * df['ATR20'][i]
-    exe_buffer   = 1 * df['ATR20'][i]
-    exe_with_flow = (df['Low'][i] < df['SMA50'][i]) or (abs(df['Low'][i] - df['SMA50'][i]) < bars_buffer)
-    exe_not_far   = (abs(df['Low'][i] - df['SMA20'][i]) < exe_buffer) or (abs(df['Low'][i] - df['SMA50'][i]) < exe_buffer)
-    near_ma = False
-    for k in range(i, j-1, -1):
-        near_ma = (
-            ((df['High'][k] > df['SMA20'][k]) and (df['Low'][k] < df['SMA20'][k])) or
-            (abs(df['High'][k] - df['SMA20'][k]) < bars_buffer) or
-            (abs(df['Low'][k] - df['SMA20'][k]) < bars_buffer) or
-            ((df['High'][k] > df['SMA50'][k]) and (df['Low'][k] < df['SMA50'][k])) or
-            (abs(df['High'][k] - df['SMA50'][k]) < bars_buffer) or
-            (abs(df['Low'][k] - df['SMA50'][k]) < bars_buffer)
-        )
-        if near_ma:
-            break
-    return exe and price_cond and trend_cond and trend_cond2 and exe_with_flow and exe_not_far and near_ma
+# ─── SCAN ALL SIGNALS ──────────────────────────────────────────────────────────
 
-def bullish_uc1(df, i, sma_start=-1, sma_end=-6, recent_swing_start=-6, recent_swing_end=-26):
-    if not test_sma_above(df, sma_start, sma_end):
-        return False, None, None
-    recent_lows, recent_highs = find_recent_levels(df, recent_swing_start, recent_swing_end)
-    if not recent_lows or not recent_highs:
-        return False, None, None
-    low_idx, low_val   = recent_lows[0]
-    high_idx, high_val = recent_highs[0]
-    if (high_idx - low_idx >= 3) and (high_val - low_val > 1.5*df['ATR20'][i]):
-        if df['Close'][i] >= low_val:
-            for d in range(5):
-                if (low_idx - high_idx >= 3) and (high_val - low_val > 1.5*df['ATR20'][i]):
-                    if (df['Low'][i-d] < low_val) and (df['Low'][high_idx:i-d].min() > low_val):
-                        return True, (df.index[low_idx], low_val), (df.index[high_idx], high_val)
-    return False, None, None
+def scan_all_signals(tks, day, freq, rd_days, sma_start, sma_end,
+                     rs, re, max_br, risk, rr, entry_key):
+    all_dict  = {k: [] for k in ['UR1','DR1','bull_fs','bear_fs','bull_fs_sma','bear_fs_sma','UC1','DC1']}
+    flip_dict = {}
+    for tk in tks:
+        try:
+            df = get_stock_price(tk, freq=freq)
 
-def bearish_dc1(df, i, sma_start=-1, sma_end=-6, recent_swing_start=-6, recent_swing_end=-26):
-    if not test_sma_below(df, sma_start, sma_end):
-        return False, None, None
-    recent_lows, recent_highs = find_recent_levels(df, recent_swing_start, recent_swing_end)
-    if not recent_lows or not recent_highs:
-        return False, None, None
-    low_idx, low_val   = recent_lows[0]
-    high_idx, high_val = recent_highs[0]
-    if (high_idx < low_idx) and (high_val - low_val > 1.5*df['ATR20'][i]):
-        if df['Close'][i] <= high_val:
-            for d in range(5):
-                if low_idx < i-d:
-                    if (df['High'][i-d] > high_val) and (df['High'][low_idx:i-d].max() < high_val):
-                        return True, (df.index[low_idx], low_val), (df.index[high_idx], high_val)
-    return False, None, None
+            bear_ur, ur_sw = bearish_ur1(df, day, rise_days=rd_days)
+            bull_dr, dr_sw = bullish_dr1(df, day, drop_days=rd_days)
+            bear_fs, bf_sb = bearish_fs(df, day)
+            bull_fs, bl_sb = bullish_fs(df, day)
+            bull_uc1, ul, uh = bullish_uc1(df, day, sma_start, sma_end, rs, re)
+            bear_dc1, dl, dh = bearish_dc1(df, day, sma_start, sma_end, rs, re)
 
-def plot_all_with_return(levels, df, day, ticker, direction, entry, fs_bar=None):
-    fig = go.Figure(data=[
-        go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']),
-        go.Scatter(x=df.index, y=df.SMA50, line=dict(width=1), name='SMA 50'),
-        go.Scatter(x=df.index, y=df.SMA20, line=dict(width=1), name='SMA 20')
-    ])
-    # entry/TP rect
+            def add(key, lvl, dirn, swing=None, fsb=None, smakey=None):
+                d = {'Ticker':tk,'Levels':lvl,'Direction':dirn}
+                if swing is not None: d['Swing Bar']=swing
+                if fsb is not None:    d['FS Bar']=fsb
+                if smakey is not None: d['SMA Key']=smakey
+                d['Prices Entry'] = get_enter_prices(df, day, tk, direction=dirn, risk=risk, ratio=rr)
+                all_dict[key].append(d)
+
+            if bear_ur:
+                ll,hh = find_levels(df, max_br)
+                ok,l = test_force_top(df, day, hh)
+                add('UR1', hh, 'Short', swing=ur_sw)
+            if bull_dr:
+                ll,hh = find_levels(df, max_br)
+                ok,l = test_force_bottom(df, day, ll)
+                add('DR1', ll, 'Long', swing=dr_sw)
+            if bear_fs:
+                ll,hh = find_levels(df, max_br)
+                add('bear_fs', hh, 'Short', fsb=bf_sb)
+                if test_sma_below(df, day, day-5):
+                    add('bear_fs_sma', hh, 'Short', fsb=bf_sb, smakey='below')
+            if bull_fs:
+                ll,hh = find_levels(df, max_br)
+                add('bull_fs', ll, 'Long', fsb=bl_sb)
+                if test_sma_above(df, day, day-5):
+                    add('bull_fs_sma', ll, 'Long', fsb=bl_sb, smakey='above')
+            if bull_uc1:
+                add('UC1', [ul,uh], 'Long')
+            if bear_dc1:
+                add('DC1', [dl,dh], 'Short')
+
+        except Exception as e:
+            print(f"[{tk}] error:", e)
+
+    for strat, lst in all_dict.items():
+        for d in lst:
+            flip_dict.setdefault(d['Ticker'], []).append(strat)
+
+    with open('interested_tickers.pickle','wb') as f:
+        pickle.dump(all_dict, f)
+    with open('flip_dict.pickle','wb') as f:
+        pickle.dump(flip_dict, f)
+
+    return all_dict, flip_dict
+
+# ─── PLOTTING & POSTING ───────────────────────────────────────────────────────
+
+def plot_all_with_return(levels, df, day, title, direction, entry, fs_bar=None):
+    fig = go.Figure(go.Candlestick(
+        x=df.index, open=df.Open, high=df.High, low=df.Low, close=df.Close
+    ))
+    # entry->TP
     fig.add_shape(type="rect", x0=df.index[day], x1=df.index[-1],
                   y0=entry['enter'], y1=entry['take_profit'],
-                  line_width=1, fillcolor="blue", opacity=0.05)
-    # entry/SL rect
+                  fillcolor="blue", opacity=0.1)
+    # entry->SL
     fig.add_shape(type="rect", x0=df.index[day], x1=df.index[-1],
                   y0=entry['enter'], y1=entry['stop_loss'],
-                  line_width=1, fillcolor="red", opacity=0.05)
-    # draw levels
+                  fillcolor="red", opacity=0.1)
     for lvl in levels:
         fig.add_shape(type="line", x0=lvl[0], x1=df.index[day],
-                      y0=lvl[1], y1=lvl[1], line_width=1, dash="dash")
-    # FS bar highlight
+                      y0=lvl[1], y1=lvl[1], dash="dash")
     if fs_bar:
         fig.add_shape(type="rect",
                       x0=df.index[day+1-fs_bar], x1=df.index[day],
-                      y0=df['Low'][day+1-fs_bar], y1=df['High'][day+1-fs_bar],
-                      fillcolor="yellow", opacity=0.35)
-    # arrow
-    if direction == 'Long':
-        arrow_start = df['Low'][day] - df['ATR20'][day]
-        arrow_end   = arrow_start*0.2
-    else:
-        arrow_start = df['High'][day] + df['ATR20'][day]
-        arrow_end   = arrow_start*0.2
-    fig.add_annotation(x=df.index[day], y=arrow_end,
-                       ax=df.index[day], ay=arrow_start,
-                       showarrow=True, arrowhead=2, arrowwidth=1)
-    fig.update_layout(title=ticker, height=800)
+                      y0=df.Low[day+1-fs_bar], y1=df.High[day+1-fs_bar],
+                      fillcolor="yellow", opacity=0.2)
+    fig.update_layout(title=title, height=600)
     return fig
 
-# ==== Scan and process functions ====
+def process_market(market, tpl, img_folder, filt, all_dict, flip_dict, texts, day, freq, entry_key):
+    html_path = tpl.format(day=day)
+    now = datetime.datetime.datetime.now()
+    dt = now.strftime("%Y/%m/%d %H:%M:%S")
+    header = f"<h3>Last updated {dt}</h3>"
 
-def scan_all_signals(stock_list_all, day, freq, rise_drop_days,
-                     sma_start, sma_end, recent_swing_start,
-                     recent_swing_end, max_breach, risk,
-                     risk_reward_ratio, prices_entry):
-    all_dict  = {'UR1':[],'DR1':[],
-                 'bull_fs':[],'bear_fs':[], 'bull_fs_sma':[], 'bear_fs_sma':[],
-                 'UC1': [], 'DC1': []}
-    flip_dict = {}
-    for i, ticker in enumerate(stock_list_all):
-        try:
-            df = get_stock_price(ticker, freq=freq)
-            # UR1 / DR1
-            bear_ur, swing_ur = bearish_ur1(df, day, rise_days=rise_drop_days)
-            bull_dr, swing_dr = bullish_dr1(df, day, drop_days=rise_drop_days)
-            # FS
-            bear_fs, fs_bar_bear = bearish_fs(df, day)
-            bull_fs, fs_bar_bull = bullish_fs(df, day)
-            # UC1 / DC1
-            bull_uc1, low_r, high_r = bullish_uc1(df, day,
-                                                  sma_start=sma_start,
-                                                  sma_end=sma_end,
-                                                  recent_swing_start=recent_swing_start,
-                                                  recent_swing_end=recent_swing_end)
-            bear_dc1, low_d, high_d = bearish_dc1(df, day,
-                                                  sma_start=sma_start,
-                                                  sma_end=sma_end,
-                                                  recent_swing_start=recent_swing_start,
-                                                  recent_swing_end=recent_swing_end)
-            # populate all_dict per your original logic (omitted here for brevity, but identical):
-            # e.g.:
-            if bull_uc1:
-                df_entry = {
-                    'Ticker': ticker,
-                    'Levels': [low_r, high_r],
-                    'Direction': 'Long'
-                }
-                df_entry['Prices Entry'] = get_enter_prices(
-                    df, day, ticker, direction='Long',
-                    risk=risk, ratio=risk_reward_ratio
-                )
-                all_dict['UC1'].append(df_entry)
-            # ... same for DC1, UR1, DR1, FS, FS_sma ...
-        except Exception as e:
-            print(f"({i}) Error for {ticker}: {e}")
-    # serialize
-    with open('interested_tickers.pickle', 'wb') as f:
-        pickle.dump(all_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
-    # build flip_dict
-    for strat, lst in all_dict.items():
-        for entry in lst:
-            t = entry['Ticker']
-            flip_dict.setdefault(t, []).append(strat)
-    with open('flip_dict.pickle', 'wb') as f:
-        pickle.dump(flip_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
-    return all_dict, flip_dict
+    lines=[]
+    for L in pprint.pformat(flip_dict).splitlines():
+        tk=L.split("':")[0].strip(" '")
+        if filt(tk):
+            lines.append(f"<br>{L}")
+            if day==-1:
+                texts[market] += "\n"+L
 
-def process_market(market, file_template, image_folder, filter_fn,
-                   all_dict, flip_dict, signal_texts, day, freq, prices_entry):
-    file_path = file_template.format(day=day)
-    now        = datetime.datetime.now()
-    dt_string  = now.strftime("%m/%d/%Y %I:%M:%S %p")
-    tz         = now.astimezone().tzname()
-    header     = (
-        "<h3>Last updated: <span id='timestring'></span></h3>"
-        f"<script>var date = new Date('{dt_string} {tz}');"
-        "document.getElementById('timestring').innerHTML += date.toString()</script>"
-    )
-    html_lines = []
-    for line in pprint.pformat(flip_dict).splitlines():
-        t = line.split("':")[0].strip(" '")
-        if filter_fn(t):
-            html_lines.append(f"<br/>{line}")
-            if day == -1:
-                signal_texts[market] += '\n' + line
-    with open(file_path, 'w') as f:
-        f.write(header + ''.join(html_lines))
-        for strat, lst in all_dict.items():
+    with open(html_path,'w') as f:
+        f.write(header + "".join(lines))
+        for strat,lst in all_dict.items():
             f.write(f"<h2>{strat}</h2>")
-            for td in lst:
-                t = td['Ticker']
-                if not filter_fn(t):
-                    continue
-                df    = get_stock_price(t, freq=freq)
-                entry = td['Prices Entry'][prices_entry]
-                td['Volume'] = df['Ave Volume 20'][day]
-                fig = plot_all_with_return(
-                    td['Levels'], df, day,
-                    f"{t}: {strat}", td['Direction'],
-                    entry, fs_bar=td.get('FS Bar')
-                )
-                mdict = td.copy()
-                pdict = mdict.pop('Prices Entry')
-                mdict.pop('Levels')
-                info_html = pd.DataFrame.from_dict(mdict, orient='index').to_html()
-                df_html   = (
-                    pd.DataFrame.from_dict(pdict, orient='index')
-                      .assign(direction=td['Direction'],
-                              volume=td['Volume'],
-                              ticker=t,
-                              date=dt_string,
-                              value=lambda d: d['n_shares']*d['enter'],
-                              strategy=strat)
-                      .reset_index()[[
-                          'date','ticker','direction','volume','index',
-                          'enter','take_profit','stop_loss','n_shares',
-                          'more_than_atr','value','strategy'
-                      ]]
-                      .to_html()
-                )
-                f.write(info_html + df_html + fig.to_html(full_html=False, include_plotlyjs='cdn'))
-                if image_folder and day == -1:
-                    pio.write_image(fig, f"{image_folder}/{t}_{strat}.png", width=1400, height=800)
-                    md = pd.DataFrame.from_dict(pdict, orient='index')[
-                        ['enter','take_profit','stop_loss','n_shares']
-                    ].to_markdown(tablefmt='grid')
-                    with open(f"{image_folder}/{t}_{strat}.txt", 'w') as txt:
-                        txt.write(f"```{md}```")
-    # send images first
-    if image_folder:
-        for img in os.listdir(image_folder):
-            if img.lower().endswith(('.png','.jpg')):
-                text = open(f"{image_folder}/{img[:-4]}.txt").read()
-                payload = {
-                    "content": (
-                        f"Signal detected for the {market}.\n"
-                        "For interactive charts, please DOWNLOAD the HTML file at the end! :)\n\n"
-                        f"{img[:-4]}\n{text}"
-                    )
-                }
-                with open(f"{image_folder}/{img}", 'rb') as im:
-                    requests.post(DISCORD_WEBHOOK_URL2, data=payload, files={"file": (img, im)})
-    # then HTML pages
-    for webhook in (DISCORD_WEBHOOK_URL, DISCORD_WEBHOOK_URL2):
-        with open(file_path, 'rb') as f:
-            payload = {
-                "content": (
-                    f"These are the current signals for the {market}.\n"
-                    "Please DOWNLOAD the HTML file and open in your browser! :)\n"
-                    f"{signal_texts[market]}"
-                ),
-                "flags": 4096
-            }
-            requests.post(webhook, data=payload, files={"file": (file_path, f)})
+            for d in lst:
+                tk=d['Ticker']
+                if not filt(tk): continue
+                df=get_stock_price(tk,freq=freq)
+                entry=d['Prices Entry'][entry_key]
+                d['Volume']=df['Ave Volume 20'][day]
+                fig=plot_all_with_return(d['Levels'],df,day,f"{tk}: {strat}",d['Direction'],entry,d.get('FS Bar'))
+                info_html=pd.DataFrame.from_dict({k:v for k,v in d.items() if k not in ['Prices Entry','Levels']},orient='index').to_html()
+                df_html=pd.DataFrame.from_dict(d['Prices Entry'],orient='index').assign(ticker=tk,date=dt).to_html()
+                f.write(info_html+df_html+fig.to_html(full_html=False))
+                if img_folder and day==-1:
+                    os.makedirs(img_folder,exist_ok=True)
+                    png=f"{img_folder}/{tk}_{strat}.png"
+                    pio.write_image(fig,png)
+                    md=pd.DataFrame.from_dict(d['Prices Entry'],orient='index')[['enter','take_profit','stop_loss','n_shares']].to_markdown(tablefmt='grid')
+                    with open(png.replace('.png','.txt'),'w') as tx:
+                        tx.write(f"```{md}```")
 
-# ==== Main execution ====
+    if img_folder:
+        for fn in os.listdir(img_folder):
+            if fn.endswith('.png'):
+                txt=open(f"{img_folder}/{fn[:-4]}.txt").read()
+                payload={"content":f"{market} signal {fn[:-4]}\n{txt}"}
+                with open(f"{img_folder}/{fn}",'rb') as im:
+                    requests.post(DISCORD_WEBHOOK_URL2,data=payload,files={"file":(fn,im)})
+
+    for wh in (DISCORD_WEBHOOK_URL,DISCORD_WEBHOOK_URL2):
+        with open(html_path,'rb') as h:
+            payload={"content":f"{market} signals — download HTML to view\n{texts[market]}", "flags":4096}
+            requests.post(wh,data=payload,files={"file":(html_path,h)})
+
+# ─── MAIN ─────────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     prepare_image_dirs()
 
-    # Load S&P 500 list
-    payload = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
-    stock_list_snp = payload[0]['Symbol'].tolist()
+    snp_list = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0]['Symbol'].tolist()
+    with open("stock_list.txt")  as f: stock_list  = [l.strip() for l in f]
+    with open("crypto_list.txt") as f: crypto_list = [l.strip() for l in f]
+    universe = list(set(snp_list + stock_list)) + crypto_list
 
-    # Load crypto_list.txt and stock_list.txt
-    with open("crypto_list.txt") as f:
-        crypto_list = [line.strip() for line in f]
-    with open("stock_list.txt") as f:
-        stock_list = [line.strip() for line in f]
-
-    # Combined universe
-    stock_list_all = list(set(stock_list_snp).union(stock_list)) + crypto_list
-
-    # Fixed parameters
     for day in [-1, -15]:
-        freq               = '2day'
-        rise_drop_days     = 5
-        sma_start          = day
-        sma_end            = day-3
-        recent_swing_start = day-30
-        recent_swing_end   = day-5
-        max_breach         = -6
-        risk               = 300
-        risk_reward_ratio  = 2
-        prices_entry       = '0.25'
+        freq = '2day'
+        rd_days = 5
+        sma_s, sma_e = day, day-3
+        rs, re = day-30, day-5
+        max_br = -6
+        risk = 300
+        rr = 2
+        entry_key = '0.25'
 
         all_dict, flip_dict = scan_all_signals(
-            stock_list_all, day, freq, rise_drop_days,
-            sma_start, sma_end, recent_swing_start,
-            recent_swing_end, max_breach, risk,
-            risk_reward_ratio, prices_entry
+            universe, day, freq, rd_days,
+            sma_s, sma_e, rs, re,
+            max_br, risk, rr, entry_key
         )
 
-        signal_texts = { m: '' for m in image_folder_paths.keys() }
+        signal_texts = {m:'' for m in file_paths}
 
         process_market(
-            "US Market", "interested_tickers_days_{day}.html",
-            image_folder_paths["US Market"], lambda t: not t.endswith('.HK'),
-            all_dict, flip_dict, signal_texts, day, freq, prices_entry
+            "US Market", file_paths["US Market"],
+            image_folder_paths["US Market"],
+            lambda t: not t.endswith('.HK'),
+            all_dict, flip_dict, signal_texts,
+            day, freq, entry_key
         )
         process_market(
-            "HK Market", "interested_tickers_hk_days_{day}.html",
-            image_folder_paths["HK Market"], lambda t: t.endswith('.HK'),
-            all_dict, flip_dict, signal_texts, day, freq, prices_entry
+            "HK Market", file_paths["HK Market"],
+            image_folder_paths["HK Market"],
+            lambda t: t.endswith('.HK'),
+            all_dict, flip_dict, signal_texts,
+            day, freq, entry_key
         )
         # process_market(
-        #     "SNP Market", "interested_tickers_snp_days_{day}.html",
-        #     image_folder_paths["Crypto Market"], lambda t: t in stock_list_snp,
-        #     all_dict, flip_dict, signal_texts, day, freq, prices_entry
+        #     "SNP Market", file_paths["SNP Market"],
+        #     image_folder_paths["SNP Market"],
+        #     lambda t: t in snp_list,
+        #     all_dict, flip_dict, signal_texts,
+        #     day, freq, entry_key
         # )
         process_market(
-            "Crypto Market", "interested_tickers_crypto_days_{day}.html",
-            image_folder_paths["Crypto Market"], lambda t: t in crypto_list,
-            all_dict, flip_dict, signal_texts, day, freq, prices_entry
+            "Crypto Market", file_paths["Crypto Market"],
+            image_folder_paths["Crypto Market"],
+            lambda t: t in crypto_list,
+            all_dict, flip_dict, signal_texts,
+            day, freq, entry_key
         )
