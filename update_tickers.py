@@ -395,7 +395,7 @@ def plot_all_with_return(levels, df, day, title, direction, entry, fs_bar=None):
 
 def process_market(market, tpl, img_folder, filt, all_dict, flip_dict, texts, day, freq, entry_key):
     html_path = tpl.format(day=day)
-    now = datetime.datetime.datetime.now()
+    now = datetime.datetime.now()
     dt = now.strftime("%Y/%m/%d %H:%M:%S")
     header = f"<h3>Last updated {dt}</h3>"
 
